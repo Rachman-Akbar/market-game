@@ -4,6 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.luminasdgs.data.remote.GameDataRepository
+import kotlinx.coroutines.launch
 
 class CleanRiverViewModel : ViewModel() {
     data class RiverItem(val name: String, val type: String)
@@ -88,6 +91,7 @@ class CleanRiverViewModel : ViewModel() {
             isCompleted = true
             isGameOver = true
             currentItem = null
+            reportGameCompletion("clean_river_completed", score)
             return
         }
         if (life <= 0) {
@@ -96,5 +100,11 @@ class CleanRiverViewModel : ViewModel() {
             return
         }
         currentItem = items.getOrNull(processedCount)
+    }
+
+    private fun reportGameCompletion(eventType: String, value: Int) {
+        viewModelScope.launch {
+            GameDataRepository.reportGameCompletion(eventType, value)
+        }
     }
 }

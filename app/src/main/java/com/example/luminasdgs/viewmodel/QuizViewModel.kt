@@ -4,8 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.luminasdgs.data.dummy.QuizDummyData
 import com.example.luminasdgs.data.model.QuizQuestion
+import com.example.luminasdgs.data.remote.GameDataRepository
+import kotlinx.coroutines.launch
 
 class QuizViewModel : ViewModel() {
     private val allQuestions = QuizDummyData.questions
@@ -27,6 +30,8 @@ class QuizViewModel : ViewModel() {
     var isAnswerLocked by mutableStateOf(false)
         private set
     var isQuizStarted by mutableStateOf(false)
+        private set
+    var isQuizCompleted by mutableStateOf(false)
         private set
 
     val currentQuestion: QuizQuestion?
@@ -71,5 +76,16 @@ class QuizViewModel : ViewModel() {
         feedbackMessage = null
         lastExplanation = null
         isAnswerLocked = false
+
+        if (currentIndex >= questions.size) {
+            isQuizCompleted = true
+            reportGameCompletion("quiz_completed", score)
+        }
+    }
+
+    private fun reportGameCompletion(eventType: String, value: Int) {
+        viewModelScope.launch {
+            GameDataRepository.reportGameCompletion(eventType, value)
+        }
     }
 }

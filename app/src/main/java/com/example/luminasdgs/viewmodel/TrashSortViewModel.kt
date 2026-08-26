@@ -6,8 +6,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.luminasdgs.data.dummy.TrashDummyData
 import com.example.luminasdgs.data.model.TrashItem
+import com.example.luminasdgs.data.remote.GameDataRepository
+import kotlinx.coroutines.launch
 
 private const val CORRECT_SCORE = 10
 private const val WRONG_SCORE_PENALTY = 5
@@ -135,5 +138,14 @@ class TrashSortViewModel : ViewModel() {
         isCompleted = completed
         isGameOver = true
         spawned.clear()
+        if (completed) {
+            reportGameCompletion("trash_sort_completed", score)
+        }
+    }
+
+    private fun reportGameCompletion(eventType: String, value: Int) {
+        viewModelScope.launch {
+            GameDataRepository.reportGameCompletion(eventType, value)
+        }
     }
 }

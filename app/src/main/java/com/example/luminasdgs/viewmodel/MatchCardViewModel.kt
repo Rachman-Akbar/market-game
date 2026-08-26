@@ -5,9 +5,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.luminasdgs.data.dummy.SdgDummyData
 import com.example.luminasdgs.data.model.SdgGoal
 import com.example.luminasdgs.data.model.SdgStatement
+import com.example.luminasdgs.data.remote.GameDataRepository
+import kotlinx.coroutines.launch
 
 class MatchCardViewModel : ViewModel() {
     private var statements: List<SdgStatement> = SdgDummyData.statements.shuffled()
@@ -65,6 +68,7 @@ class MatchCardViewModel : ViewModel() {
         if (currentIndex >= statements.size) {
             isCompleted = true
             isGameOver = true
+            reportGameCompletion("match_card_completed", score)
         }
     }
 
@@ -85,5 +89,11 @@ class MatchCardViewModel : ViewModel() {
         lastMoveMatched = null
         isCompleted = false
         isGameOver = false
+    }
+
+    private fun reportGameCompletion(eventType: String, value: Int) {
+        viewModelScope.launch {
+            GameDataRepository.reportGameCompletion(eventType, value)
+        }
     }
 }

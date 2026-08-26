@@ -5,8 +5,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.luminasdgs.data.dummy.MythFactDummyData
 import com.example.luminasdgs.data.model.MythFactStatement
+import com.example.luminasdgs.data.remote.GameDataRepository
+import kotlinx.coroutines.launch
 
 class MythFactViewModel : ViewModel() {
     private var statements: List<MythFactStatement> = MythFactDummyData.items.shuffled()
@@ -62,6 +65,7 @@ class MythFactViewModel : ViewModel() {
         if (currentIndex >= statements.size) {
             isCompleted = true
             isGameOver = true
+            reportGameCompletion("myth_fact_completed", score)
         }
     }
 
@@ -82,5 +86,11 @@ class MythFactViewModel : ViewModel() {
         lastAnswerCorrect = null
         isCompleted = false
         isGameOver = false
+    }
+
+    private fun reportGameCompletion(eventType: String, value: Int) {
+        viewModelScope.launch {
+            GameDataRepository.reportGameCompletion(eventType, value)
+        }
     }
 }
