@@ -59,6 +59,57 @@ object GameDataRepository {
         }
     }
 
+    suspend fun reportArithmeticKilat(
+        sessionId: String,
+        durationSeconds: Int,
+        difficulty: String,
+        questions: List<com.example.luminasdgs.data.model.ArithmeticQuestion>,
+        userAnswers: List<Int?>
+    ): Result<GameReportResponse> {
+        return try {
+            val payload = questions.mapIndexed { index, q ->
+                GameQuestionPayload(
+                    operand_a = q.operandA,
+                    operator = q.operator,
+                    operand_b = q.operandB,
+                    user_answer = userAnswers.getOrNull(index)
+                )
+            }
+            val request = GameReportRequest(
+                game_type = "arithmetic_kilat",
+                session_id = sessionId,
+                duration_seconds = durationSeconds,
+                difficulty = difficulty,
+                questions = payload,
+                grid = null
+            )
+            Result.success(api.reportGame(request))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun reportSudoku(
+        sessionId: String,
+        durationSeconds: Int,
+        difficulty: String,
+        grid: List<Int>
+    ): Result<GameReportResponse> {
+        return try {
+            val request = GameReportRequest(
+                game_type = "sudoku",
+                session_id = sessionId,
+                duration_seconds = durationSeconds,
+                difficulty = difficulty,
+                questions = null,
+                grid = grid
+            )
+            Result.success(api.reportGame(request))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ── Cart ─────────────────────────────────────────────────────────────
 
     suspend fun getCart(): Result<List<CartItemResponse>> {

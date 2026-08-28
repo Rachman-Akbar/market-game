@@ -13,10 +13,12 @@ import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.example.luminasdgs.ui.components.BottomNavigationBar
 import com.example.luminasdgs.ui.screens.game.GameScreen
+import com.example.luminasdgs.ui.screens.game.arithmetic.ArithmeticScreen
 import com.example.luminasdgs.ui.screens.game.matchcard.MatchCardScreen
 import com.example.luminasdgs.ui.screens.game.mythfacts.MythFactScreen
 import com.example.luminasdgs.ui.screens.game.quiz.QuizScreen
 import com.example.luminasdgs.ui.screens.game.river.CleanRiverScreen
+import com.example.luminasdgs.ui.screens.game.sudoku.SudokuScreen
 import com.example.luminasdgs.ui.screens.game.trashsort.TrashSortScreen
 import com.example.luminasdgs.ui.screens.onboarding.OnboardingImpactScreen
 import com.example.luminasdgs.ui.screens.onboarding.OnboardingLearnScreen
@@ -73,6 +75,8 @@ fun AppNavigation() {
             composable(Screen.MatchCard.route) { MatchCardScreen(navController = navController) }
             composable(Screen.CleanRiver.route) { CleanRiverScreen(navController = navController) }
             composable(Screen.MythFact.route) { MythFactScreen(navController = navController) }
+            composable(Screen.ArithmeticKilat.route) { ArithmeticScreen(navController = navController) }
+            composable(Screen.Sudoku.route) { SudokuScreen(navController = navController) }
             composable(Screen.AchievementHub.route) { AchievementHubScreen(navController = navController) }
             composable(Screen.AchievementQuiz.route) { QuizAchievementScreen(navController = navController) }
             composable(Screen.AchievementMatchCard.route) { MatchCardAchievementScreen(navController = navController) }

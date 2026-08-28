@@ -1303,3 +1303,86 @@ Alasan:
 | 8 | **Zero test coverage** — tidak ada automated tests | Setiap perubahan berisiko regression tanpa detection |
 | 9 | **Order detail page tidak ada** — redirect ke cart tab | User tidak bisa lihat detail order secara proper |
 | 10 | **Frontend voucher page menampilkan semua voucher publik** | "Voucher Saya" tidak menampilkan voucher yang sudah di-claim user |
+
+---
+
+## 21. Session: IAK/PPOB, Pricing, Finance, Games, Admin Store Context, Perf & Frontend
+
+### Scope (per user directive)
+- Fokus perbaikan & testing **frontend + backend**; Android di-skip untuk build/compile setelah perbaikan terakhir (user: *"skip android setelah perbaikan terakhir... tidak perlu melakukan run and build di android untuk sementara"*).
+- Terapkan backend ke frontend marketplace (buyer PPOB + Admin Store Context).
+
+### Backend — PPOB (Mobile Pulsa / IAK)
+- Migration `2026_08_28_100000_create_ppob_tables.php` (PpoOperator, PpoProduct, PpoPricingRule, PpoOrder, PpoOrderItem, PpoTopUpStatus).
+- `PricingEngine` — harga final = `cost + markup (%) + margin (fixed)` dari `PpoPricingRule`, per provider product code.
+- `PpoOrderService` — buat order, hitung harga via PricingEngine, catat **finance ledger** secara idempotent, order success dengan fake top-up (mode development), penelusuran via `reference_id`.
+- `IakProviderClient` — client IAK stage (`IAK_DEV_*`), path relatif (`/top-up`, `/check-status`, `/balance/check`, `/v1/bill/check`), kredensial dari env (tidak pernah hardcoded/logged).
+- 25 route PPOB terdaftar di bawah `api/v1`.
+- **Verifikasi**: integration test sukses — order sukses, 5 entri finance ledger, tidak ada secret bocor, lookup `reference_id` benar. `PpoOperator` provider_name default diperbaiki.
+
+### Backend — Games
+- `POST /engagement/games/report` (middleware `auth:sanctum,active.user,verified.email,throttle:60,1`, prefix `engagement/games`).
+- `game_type` validated (whitelist `['arithmetic_kilat','sudoku']`), server **recompute** skor dari `questions[]` (arithmetic: 10 pts/correct; sudoku: 500 flat), reject duplikat session (unique `(user_id,game_type,session_id)`), reject duration mustahil, daily cap 50.
+- HTTP 201 diterima / 409 duplikat / 422 reject. `GameSessionModel` tanpa SoftDeletes.
+- **Verifikasi**: integration test — valid arithmetic diterima (50), duplikat ditolak, jawaban salah dihitung ulang (2/3→20), duration mustahil ditolak, sudoku valid 500, sudoku tidak valid ditolak.
+
+### Backend — Admin Store Context + Perf/Cache
+- Endpoint `/api/v1/admin/stores/context` (daftar toko) + `/{store}/stats|-order-trend|-orders|-products|-settlements`.
+- Optimization: cache **scalar array** (TTL 300) — hanya tipe skalar (tidak pernah cache DTO/Model object) karena store `database` tidak bisa serialize object.
+- **Verifikasi**: store 1 → 140 orders, 262.975.000 revenue, 100 products; dashboard 232 orders, fee 13000, top_stores 5; `cache:clear` dijalankan setelah perubahan entity shape.
+
+### Frontend — PPOB (Buyer + Admin)
+- `src/features/ppob/services/ppobService.js`: katalog buyer + admin (balance IAK, products, operators, pricing rules CRUD); `normalizePpobProduct` menyertakan `providerProductCode`.
+- `src/features/ppob/pages/PpobPage.jsx`: halaman buyer (tabs Beli/Riwayat, kategori, pilih operator, grid produk, modal beli, filter status riwayat).
+- `src/features/admin/ppob/pages/AdminPpobPage.jsx`: admin tabbed (Dashboard/Finance/Products/Operators/Pricing), stat cards, balance IAK, modal create produk/operator/rule, delete produk.
+- Route `/ppob` + `/admin/ppob` ditambahkan di `App.jsx`; Navbar link "PPOB & Top Up" + `ADMIN_NAV_ITEMS`.
+
+### Frontend — Admin Store Context
+- `src/features/admin/storeContext/services/adminStoreContextService.js`: query stores/stats/order-trend/orders/products/settlements.
+- `src/features/admin/storeContext/pages/AdminStoreContextPage.jsx`: store selector → Statistik/Tren/Pesanan/Produk/Settlement specifik toko.
+- Route `/admin/store-context` + `ADMIN_NAV_ITEMS` "Monitoring Toko".
+
+### Frontend — Build Verification
+- `vite build` SUCCESS (2022 modules, ~2m9s), semua chunk baru ter-compile bersih. Hanya peringatan chunk-size (pre-existing, bukan error). eslint tidak tersedia di project → verifikasi via vite build.
+
+### Android — Arithmetic Kilat & Sudoku (ditulis, TIDAK di-compile per user)
+- `ArithmeticQuestion.kt`, `ArithmeticDummyData.kt`, `ArithmeticViewModel.kt`, `ArithmeticScreen.kt` (60s timer + 3s countdown, numpad, difficulty, CompletionDialog).
+- `SudokuDummyData.kt` (valid grid + `isValidSolution`), `SudokuViewModel.kt`, `SudokuScreen.kt` (9x9, givens non-editable, numpad 1-9 + clear, 600s timer).
+- `ApiService.kt` DTO (`GameReportRequest` dll) + `@POST("engagement/games/report")`; `GameDataRepository.reportArithmeticKilat/reportSudoku`; `Screen.kt`, `AppNavigation.kt`, `GameScreen.kt` terdaftar.
+- Klien kirim **jawaban aktual user** per index → server recompute jujur. Rewards ditampilkan klien tapi server adalah sumber kebenaran.
+
+### Sign-off
+- PPOB & game backend integration tests lulus; PHP lint bersih; frontend production build lulus. Android build **tidak** dijalankan (skip per user). `cache:clear` dijalankan sesuai kebutuhan.
+
+---
+
+## 22. Session: Fixes Bug/Keamanan, Storage/Gambar, Seeder Seller Akbar, Test PHPUnit
+
+### Migrasi Integration Test ke PHPUnit
+- Dirikan 	ests/ + 	ests/TestCase.php + 	ests/CreatesApplication.php + 	ests/IntegrationTestCase.php.
+- Config phpunit.integration.xml (MySQL, tanpa RefreshDatabase untuk hindari operasi destruktif; tes self-cleaning).
+- 	ests/Feature/PPOB/PlacePpoOrderIntegrationTest.php + 	ests/Feature/Gaming/GameReportIntegrationTest.php.
+- Hasil: OK (7 tests, 26 assertions).
+
+### Race Condition & Idempotency Pembayaran
+- ProcessPaymentUseCase::execute dibungkus DB::transaction + lockForUpdate pada baris order (OrderRepositoryInterface::findByOrderNumber(, )), sehingga exists-check + insert serial — cegah duplicate payment rows pada concurrent submit.
+
+### Keamanan (Verifikasi / Sudah Aman)
+- IDOR user profile: sudah diamankan UserController::ensureAccess (non-admin hanya akses dirinya). Tidak ada perubahan diperlukan.
+- Voucher: semua write/claim/use sudah auth; hanya GET /order/vouchers (info publik) tanpa token. OK.
+- Seller product costing routes: TERDAFTAR (admin+seller GET/PUT). 404 sebelumnya = server stale/deploy, bukan route hilang.
+
+### Storage / Gambar (Root cause gambar kosong)
+- Symlink/junction public/storage menunjuk target salah (D:\New folder\market-api\... bukan marketplace\market-api\...). Diperbaiki ke D:\New folder\marketplace\market-api\storage\app\public. Semua /storage/... (avatar, logo seller, produk, voucher) kini ter-resolve.
+- Frontend profil avatar: render avatar asli (bukan hanya inisial) + tombol "Ubah Foto" kini berfungsi (upload ke /catalog/media/images, simpan vatar via PUT user, refresh). ProfileIdentityCard memakai esolveMediaUrl.
+
+### Seeder Seller Akbar (realtime database)
+- database/seeders/AkbarFahlevySellerSeeder.php (idempotent, additive), terdaftar di DatabaseSeeder.
+- User kbarfahlevy39@gmail.com password 123: role seller+buyer, active+verified, store "Akbar Fahlevy Store" (approved/active).
+- Data seller panel: 16 produk, 15 sub-order, 6 settlement, 16 financial_transactions, 30 stock_movements, 6 schedule, 4 withdrawal, payments, reviews, promotions, showcases.
+- Verified: LoginUserUseCase dengan email/password/role=seller -> active_role seller + store {id:106, name:Akbar Fahlevy Store}; api_token + access_token terbit.
+
+### Build/Health
+- Backend: PHP lint bersih (semua file baru/diubah), cache:clear + config:clear OK, integration tests green.
+- Frontend: ite build SUCCESS, ProfilePage ter-compile (hanya warning chunk-size pre-existing).
+- Android: tetap SKIP build sesuai arahan user (kode game sudah ditulis sebelumnya).

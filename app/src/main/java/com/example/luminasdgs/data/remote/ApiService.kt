@@ -68,6 +68,40 @@ data class MissionResponse(
 data class GameCompletionRequest(val event_type: String, val value: Int)
 data class MissionReportResponse(val missions_updated: Int, val rewards_earned: List<String>)
 
+data class GameQuestionPayload(
+    val operand_a: Int,
+    val operator: String,
+    val operand_b: Int,
+    val user_answer: Int?
+)
+
+data class GameReportRequest(
+    val game_type: String,
+    val session_id: String,
+    val duration_seconds: Int,
+    val difficulty: String?,
+    val questions: List<GameQuestionPayload>?,
+    val grid: List<Int>?
+)
+
+data class GameReportResponse(
+    val session: GameSessionResponse?,
+    val success: Boolean?,
+    val message: String?
+)
+
+data class GameSessionResponse(
+    val id: Int,
+    val game_type: String?,
+    val session_id: String?,
+    val score: Int,
+    val correct_count: Int?,
+    val total_questions: Int?,
+    val duration_seconds: Int?,
+    val difficulty: String?,
+    val coins_awarded: Int?
+)
+
 // ── Order ────────────────────────────────────────────────────────────────
 
 data class CartItemResponse(
@@ -165,6 +199,9 @@ interface ApiService {
 
     @POST("engagement/missions/report")
     suspend fun reportGameCompletion(@Body body: GameCompletionRequest): ApiResponse<MissionReportResponse>
+
+    @POST("engagement/games/report")
+    suspend fun reportGame(@Body body: GameReportRequest): GameReportResponse
 
     // ── Users ────────────────────────────────────────────────────────────
 

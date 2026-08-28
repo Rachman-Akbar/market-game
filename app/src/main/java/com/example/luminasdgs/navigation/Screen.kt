@@ -16,6 +16,8 @@ sealed class Screen(val route: String) {
     data object MatchCard : Screen("match_card")
     data object CleanRiver : Screen("clean_river")
     data object MythFact : Screen("myth_fact")
+    data object ArithmeticKilat : Screen("arithmetic_kilat")
+    data object Sudoku : Screen("sudoku")
     data object AchievementHub : Screen("achievement_hub")
     data object AchievementQuiz : Screen("achievement_quiz")
     data object AchievementMatchCard : Screen("achievement_match_card")

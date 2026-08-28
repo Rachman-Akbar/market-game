@@ -87,6 +87,24 @@ fun GameScreen(navController: NavController) {
             tagBackground = Color(0xFFF3E5F5),
             imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuAue-XbL4OPlbmTj4S1WUJdDqfEVsqx8ij6D4ZO8RIK1OnQ4VJCAeEfvBLOcw0CLczkP7hwbSnk_qwyo3KxFXqlX8Dr3mGUlKK7NGVEWPattCR1A8F1AQPM2v5jBVriQ0k8i9K3fclFDGT61is6ej3tJgzBGcyULn0-jLgX-yQjH-HwzO1nxQ33delQfmuZr2_6cR0rrTFnjzXmIC1pOCHT-fdF6AfKNX-FIady5wnO-25rIRbqrsEgmMcyhPCGMa46sSolTrZkSA",
             onClick = { navController.navigate(Screen.MatchCard.route) }
+        ),
+        GameCardItem(
+            title = "Arithmetic Kilat",
+            tag = "MATH",
+            reward = "+30 HK",
+            tagColor = Color(0xFF00838F),
+            tagBackground = Color(0xFFE0F7FA),
+            imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuD2gT85bqz6sDnX3kZ5dq_5pzZbV6uWq2dGz7kJ8jJgG1s9WlHBcs6QYtKa2Nves0GdP7RlZ3f8pTqA6l1oN3YqM9b2yC4kPnxB7W1z4GzJvQj8XH28YyVvK6uN7mLGpDcKZ3yQ8X2uB9g",
+            onClick = { navController.navigate(Screen.ArithmeticKilat.route) }
+        ),
+        GameCardItem(
+            title = "Sudoku",
+            tag = "PUZZLE",
+            reward = "+50 HK",
+            tagColor = Color(0xFF455A64),
+            tagBackground = Color(0xFFECEFF1),
+            imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuB5fW7kYdQn3vE2qU8pRs6dZn4xTq5cGj9bH3w8fK1mN7P0sL2yQ9X8vA1cN4mB5pE7rW6uZ3sD9xK6qV8jA2nH5cG4",
+            onClick = { navController.navigate(Screen.Sudoku.route) }
         )
     )
 
