@@ -27,7 +27,12 @@ object GameDataRepository {
 
     suspend fun getProduct(id: Int): Result<ProductResponse> {
         return try {
-            Result.success(api.getProduct(id).data!!)
+            val data = api.getProduct(id).data
+            if (data != null) {
+                Result.success(data)
+            } else {
+                Result.failure(RuntimeException("Produk tidak ditemukan."))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -53,7 +58,12 @@ object GameDataRepository {
 
     suspend fun reportGameCompletion(eventType: String, value: Int): Result<MissionReportResponse> {
         return try {
-            Result.success(api.reportGameCompletion(GameCompletionRequest(eventType, value)).data!!)
+            val data = api.reportGameCompletion(GameCompletionRequest(eventType, value)).data
+            if (data != null) {
+                Result.success(data)
+            } else {
+                Result.failure(RuntimeException("Gagal melaporkan misi."))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -122,7 +132,13 @@ object GameDataRepository {
 
     suspend fun addToCart(productId: Int, quantity: Int = 1): Result<CartItemResponse> {
         return try {
-            Result.success(api.addToCart(mapOf("product_id" to productId, "quantity" to quantity)).data!!)
+            val result = api.addToCart(mapOf("product_id" to productId, "quantity" to quantity))
+            val data = result.data
+            if (data != null) {
+                Result.success(data)
+            } else {
+                Result.failure(RuntimeException(result.message ?: "Gagal menambahkan ke keranjang."))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

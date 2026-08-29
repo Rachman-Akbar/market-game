@@ -40,6 +40,14 @@ object ApiClient {
 
     // ── Public API ───────────────────────────────────────────────────────
 
+    /**
+     * Initializes the app context. Call from an Application subclass at startup
+     * so repositories can be used anywhere without a Context.
+     */
+    fun initialize(context: Context) {
+        appContext = context.applicationContext
+    }
+
     fun getInstance(context: Context): ApiService {
         appContext = context.applicationContext
         return apiService ?: synchronized(this) {
@@ -55,9 +63,10 @@ object ApiClient {
      */
     fun rebuild(context: Context) {
         synchronized(this) {
+            appContext = context.applicationContext
             retrofit = null
             apiService = null
-            buildRetrofit(context.applicationContext)
+            apiService = buildRetrofit(context.applicationContext)
         }
     }
 
@@ -96,12 +105,13 @@ object ApiClient {
     ) : Interceptor {
         override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
             val original = chain.request()
-            val dynamicUrl = baseUrlManager.getBaseUrl()
+            val dynamic = okhttp3.HttpUrl.parse(baseUrlManager.getBaseUrl())
+                ?: return chain.proceed(original)
 
             val newUrl = original.url.newBuilder()
-                .scheme(okhttp3.HttpUrl.parse(dynamicUrl)?.scheme() ?: "http")
-                .host(okhttp3.HttpUrl.parse(dynamicUrl)?.host() ?: original.url.host())
-                .port(okhttp3.HttpUrl.parse(dynamicUrl)?.port() ?: original.url.port())
+                .scheme(dynamic.scheme())
+                .host(dynamic.host())
+                .port(dynamic.port())
                 .build()
 
             val newRequest = original.newBuilder()

@@ -349,52 +349,52 @@ private fun TrashBinRow(
     ) {
         TrashBinButton(
             label = "ORGANIK",
-            binKey = Constants.BIN_GREEN,
+            binKey = Constants.BIN_HIJAU,
             imageRes = R.drawable.ic_bin_organik,
             modifier = Modifier
                 .weight(1f)
                 .onGloballyPositioned { coords ->
-                    binRects[Constants.BIN_GREEN] = coords.boundsInRoot()
+                    binRects[Constants.BIN_HIJAU] = coords.boundsInRoot()
                 }
         )
         TrashBinButton(
             label = "ANORGANIK",
-            binKey = Constants.BIN_YELLOW,
+            binKey = Constants.BIN_KUNING,
             imageRes = R.drawable.ic_bin_anorganik,
             modifier = Modifier
                 .weight(1f)
                 .onGloballyPositioned { coords ->
-                    binRects[Constants.BIN_YELLOW] = coords.boundsInRoot()
+                    binRects[Constants.BIN_KUNING] = coords.boundsInRoot()
                 }
         )
         TrashBinButton(
             label = "B3",
-            binKey = Constants.BIN_RED,
+            binKey = Constants.BIN_MERAH,
             imageRes = R.drawable.ic_bin_b3,
             modifier = Modifier
                 .weight(1f)
                 .onGloballyPositioned { coords ->
-                    binRects[Constants.BIN_RED] = coords.boundsInRoot()
+                    binRects[Constants.BIN_MERAH] = coords.boundsInRoot()
                 }
         )
         TrashBinButton(
             label = "KERTAS",
-            binKey = Constants.BIN_BLUE,
+            binKey = Constants.BIN_BIRU,
             imageRes = R.drawable.ic_bin_kertas,
             modifier = Modifier
                 .weight(1f)
                 .onGloballyPositioned { coords ->
-                    binRects[Constants.BIN_BLUE] = coords.boundsInRoot()
+                    binRects[Constants.BIN_BIRU] = coords.boundsInRoot()
                 }
         )
         TrashBinButton(
             label = "RESIDU",
-            binKey = Constants.BIN_GRAY,
+            binKey = Constants.BIN_ABU,
             imageRes = R.drawable.ic_bin_residu,
             modifier = Modifier
                 .weight(1f)
                 .onGloballyPositioned { coords ->
-                    binRects[Constants.BIN_GRAY] = coords.boundsInRoot()
+                    binRects[Constants.BIN_ABU] = coords.boundsInRoot()
                 }
         )
     }

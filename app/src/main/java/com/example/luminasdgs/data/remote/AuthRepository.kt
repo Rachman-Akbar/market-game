@@ -22,13 +22,18 @@ class AuthRepository(context: Context) {
 
     suspend fun login(email: String, password: String): Result<UserResponse> {
         return try {
-            val response = api.login(LoginRequest(email, password))
-            val authData = response.data
+            val result = api.login(LoginRequest(email, password))
+            val authData = result.data
+            val user = authData?.user
             if (authData?.token != null) {
                 saveToken(authData.token)
-                saveUserId(authData.user?.id)
+                saveUserId(user?.id)
             }
-            Result.success(authData!!.user!!)
+            if (user != null) {
+                Result.success(user)
+            } else {
+                Result.failure(RuntimeException(result.message ?: "Login gagal. Periksa email dan kata sandi."))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -43,15 +48,20 @@ class AuthRepository(context: Context) {
         passwordConfirmation: String
     ): Result<UserResponse> {
         return try {
-            val response = api.register(
+            val result = api.register(
                 RegisterRequest(name, email, password, passwordConfirmation)
             )
-            val authData = response.data
+            val authData = result.data
+            val user = authData?.user
             if (authData?.token != null) {
                 saveToken(authData.token)
-                saveUserId(authData.user?.id)
+                saveUserId(user?.id)
             }
-            Result.success(authData!!.user!!)
+            if (user != null) {
+                Result.success(user)
+            } else {
+                Result.failure(RuntimeException(result.message ?: "Registrasi gagal."))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -61,8 +71,13 @@ class AuthRepository(context: Context) {
 
     suspend fun getProfile(): Result<UserResponse> {
         return try {
-            val response = api.getMe()
-            Result.success(response.data!!)
+            val result = api.getMe()
+            val user = result.data
+            if (user != null) {
+                Result.success(user)
+            } else {
+                Result.failure(RuntimeException(result.message ?: "Gagal memuat profil."))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

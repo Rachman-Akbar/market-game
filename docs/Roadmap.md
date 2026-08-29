@@ -2,7 +2,7 @@
 
 ## Status Perubahan Terakhir
 
-Terakhir diperbarui: 26 Agustus 2026
+Terakhir diperbarui: 29 Agustus 2026
 
 ### Perubahan yang Dilakukan
 
@@ -14,6 +14,9 @@ Terakhir diperbarui: 26 Agustus 2026
 - [x] Fix import Excel (gunakan nama/code bukan ID)
 - [x] Tambahkan verified.email middleware ke order/cart/wishlist/address routes
 - [x] Tambahkan endpoint POST /engagement/missions/report untuk game completion
+- [x] Fix N+1 cart reader (bulk variant/attributes), dashboard & store-context SQL aggregate, eager-load hutang-piutang
+- [x] Verifikasi: 29 test PHPUnit green (82 assertions) — CRUD Catalog/Seller/Order + spreadsheet import/export + auth
+- [x] Verifikasi MidtransWebhookController tetap route LIVE (bukan dead code)
 
 **Frontend (market-frontend):**
 - [x] Fix LoadingScreen (spinner bukan null)
@@ -24,6 +27,13 @@ Terakhir diperbarui: 26 Agustus 2026
 - [x] Fix seller onboarding missing fields (whatsappUrl, tiktokUrl)
 - [x] Tambahkan ErrorBoundary component
 - [x] Fix image URL consistency (skip localhost redirect di dev)
+- [x] Hentikan polling 30s pada ~33 query publik (publicQueryOptions → false); hanya voucher aktif yang tetap live
+- [x] Hapus dead exports adminService (hilangkan cache-key collision admin catalog-groups/categories)
+- [x] Perbaiki `invalidateCategoryNavigationCache` (no-op → invalidasi navigation+menu nyata)
+- [x] Ganti invalidateQueries() tak terfilter → scoped ["auth"] pada upload avatar
+- [x] Hapus 4 halaman mati (ProfileOrdersPage, OrdersPage re-export, 2 WishlistPage)
+- [x] `loading="lazy"` pada gambar kartu produk
+- [x] Konsolidasi useAuth() berulang di ProfilePage
 
 **Android (SDGS):**
 - [x] Tambahkan game completion → mission report API

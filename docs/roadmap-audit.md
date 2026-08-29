@@ -1384,5 +1384,45 @@ Alasan:
 
 ### Build/Health
 - Backend: PHP lint bersih (semua file baru/diubah), cache:clear + config:clear OK, integration tests green.
-- Frontend: ite build SUCCESS, ProfilePage ter-compile (hanya warning chunk-size pre-existing).
+- Frontend: `vite build` SUCCESS, ProfilePage ter-compile (hanya warning chunk-size pre-existing).
 - Android: tetap SKIP build sesuai arahan user (kode game sudah ditulis sebelumnya).
+
+---
+
+## 23. Session: Frontend P1/P2 Production-Readiness (Perf, Dead Code, Cache Correctness)
+
+### Ringkasan
+Fokus sesi ini: menyelesaikan item P1/P2 frontend yang tersisa agar launch-ready — polling berlebihan, cache-key collisions, dead code halaman order/wishlist, invalidasi no-op pada kategori, dan pembersihan cache yang terlalu luas. Backend: verifikasi test suite green.
+
+### Frontend — Polling & Query Health
+- `src/core/api/publicQueryOptions.js`: `refetchInterval` diubah dari `30000` → `false` (menghentikan polling boros di ~33 query publik). Mempertahankan `staleTime: 0`, `refetchOnMount: "always"`, `refetchOnWindowFocus: true`. `PUBLIC_QUERY_REFRESH_MS` tetap diekspor.
+- `src/features/order/voucher/services/voucherService.js`: `useActiveVouchers` memakai `refetchInterval: PUBLIC_QUERY_REFRESH_MS` (live) — satu-satunya query yang tetap polling.
+- `src/features/admin/adminService.js`: hapus ekspor mati `useAdminCatalogGroups`/`useAdminCategories` + `flattenCategories`/`getCatalogGroupAdminRows`/`getCategoryAdminRows` dan unused imports — menghilangkan cache-key collision dengan `["admin","catalog-groups"]`/`["admin","categories"]` di `adminCatalogGroupService`/`adminCategoryService`.
+
+### Frontend — Cache Correctness
+- `src/features/catalog/category/services/categoryService.js`: `invalidateCategoryNavigationCache` (sebelumnya **no-op kosong**) kini benar-benar meng-invalidasi query navigation + menu (`["catalog","categories","navigation"]` / `["catalog","categories","menu"]`), menerima `queryClient` opsional.
+- `src/features/catalog/application/cache/invalidateCatalogResources.js`: meneruskan `queryClient` ke fungsi tsb (menutup gap di mana path ini tidak meng-invalidasi query TanStack navigation).
+- `src/features/admin/category/services/adminCategoryService.js`: `refreshCategoryQueries` meneruskan `queryClient` ke `invalidateCategoryNavigationCache`.
+- `src/features/profile/identity/pages/ProfilePage.jsx`: ganti `queryClient.invalidateQueries()` tanpa filter (membersihkan seluruh cache) dengan scoped `["auth"]` setelah upload avatar; konsolidasi `useAuth()` ×3 menjadi satu panggilan; hapus `useMemo` tanpa manfaat.
+
+### Frontend — Dead Code & UX
+- Hapus 4 file halaman mati (tidak ada route/import yang mereferensikannya; diverifikasi via grep + build lulus):
+  - `src/features/order/ordering/pages/ProfileOrdersPage.jsx`
+  - `src/features/profile/orders/pages/OrdersPage.jsx` (re-export 1 baris)
+  - `src/features/order/wishlist/pages/WishlistPage.jsx`
+  - `src/features/profile/wishlist/pages/WishlistPage.jsx`
+- `src/features/catalog/product/components/ProductCard.jsx`: `loading="lazy"` pada gambar kartu produk (hemat bandwidth di bawah fold).
+- Error helpers divertifikasi sudah mendelegasikan ke satu `getApiMessage` (single source of truth) — tidak perlu konsolidasi lebih lanjut.
+
+### Backend — Verifikasi
+- `MidtransWebhookController` **divalidasi sebagai route LIVE** (terdaftar di `app/Domains/Order/Payment/Presentation/routes.php:9` untuk `payment.notification`) → **tidak dihapus**.
+- Lint `php -l` bersih pada semua file domain yang diubah sesi sebelumnya (bulk reader cart, dashboard/store-context SQL aggregate, hutang-piutang, voucher repo, dll).
+- **Test suite green: 29 passed, 82 assertions** (SQLite `:memory:`) lintas `tests/Feature/Auth`, `Catalog/CategoryCrudTest`, `Catalog/ProductCrudTest`, `Seller/StoreCrudTest`, `Order/VoucherCrudTest`, `Order/OrderFlowTest`, `Spreadsheet/SpreadsheetTransferTest` (CRUD + import/export + auth).
+- Catatan: `tests/Feature/PPOB` & `tests/Feature/Gaming` tetap **dikecualikan** (butuh MySQL riil, bukan SQLite).
+
+### Frontend — Build Verification
+- `vite build` SUCCESS (2027 modules, tanpa error) setelah semua perubahan di atas.
+
+### Sisa / Catatan
+- Duplicate endpoint definitions menghasilkan cache query terpisah (mis. `/order/orderings`, `/seller/stores/manage`) — berfungsi tapi key tidak disatukan (risiko refactor > manfaat; tercatat utk ditindak lanjut).
+- Koneksi MySQL `marketplaceku` sempat refusal saat startup — MySQL sudah listening; bila terulang di artisan command, jalankan ulang (kemungkinan race saat inisialisasi).

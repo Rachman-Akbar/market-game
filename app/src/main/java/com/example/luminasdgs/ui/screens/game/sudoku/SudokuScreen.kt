@@ -76,7 +76,7 @@ fun SudokuScreen(
             viewModel.onTick(GAME_DURATION_SECONDS - remainingSeconds)
             if (remainingSeconds == 0) {
                 gameOverByTimeout = true
-                viewModel.message = "Waktu habis. Coba lagi."
+                viewModel.onTimeout()
             }
         }
     }

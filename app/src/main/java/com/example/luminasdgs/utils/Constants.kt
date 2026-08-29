@@ -1,9 +1,9 @@
 package com.example.luminasdgs.utils
 
 object Constants {
-    const val BIN_YELLOW = "Kuning"
-    const val BIN_RED = "Merah"
-    const val BIN_GREEN = "Hijau"
-    const val BIN_BLUE = "Biru"
-    const val BIN_GRAY = "Abu"
+    const val BIN_KUNING = "Kuning"
+    const val BIN_MERAH = "Merah"
+    const val BIN_HIJAU = "Hijau"
+    const val BIN_BIRU = "Biru"
+    const val BIN_ABU = "Abu"
 }

@@ -83,6 +83,12 @@ class SudokuViewModel : ViewModel() {
         durationSeconds = seconds
     }
 
+    fun onTimeout() {
+        if (isCompleted) return
+        isStarted = false
+        message = "Waktu habis. Coba lagi."
+    }
+
     fun submit() {
         if (isCompleted) return
         val completed = board.all { it != 0 }
