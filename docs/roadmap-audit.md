@@ -48,7 +48,7 @@ Backend has strong architectural foundations with DDD, comprehensive spreadsheet
 - **Language:** JavaScript (JSX) — no TypeScript strict mode
 - **Architecture:** Feature-based folder structure
 
-### Android (SDGS)
+### Android (market-game)
 - **Framework:** Kotlin, Jetpack Compose
 - **Architecture:** MVVM (ViewModel + Repository)
 - **API:** Retrofit + Moshi
@@ -823,7 +823,7 @@ Fix:        Add user-specific voucher listing endpoint and claim UI.
 ```
 Severity:   P1 (High)
 Feature:    Security
-Location:   SDGS/app/.../data/remote/ApiClient.kt
+Location:   market-game/app/.../data/remote/ApiClient.kt
 Problem:    HttpLoggingInterceptor.Level.BODY enabled unconditionally.
 Expected:   No body logging in release builds.
 Actual:     Full request/response bodies logged including auth tokens and passwords.
@@ -836,7 +836,7 @@ Fix:        Use BuildConfig.DEBUG to conditionally set log level.
 ```
 Severity:   P1 (High)
 Feature:    Security
-Location:   SDGS/app/.../data/local/AuthRepository.kt
+Location:   market-game/app/.../data/local/AuthRepository.kt
 Problem:    Auth token stored in plain "api_config_prefs" SharedPreferences.
 Expected:   Use EncryptedSharedPreferences for sensitive data.
 Actual:     Token readable by any app with storage access on rooted devices.

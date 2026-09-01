@@ -35,7 +35,7 @@ Terakhir diperbarui: 29 Agustus 2026
 - [x] `loading="lazy"` pada gambar kartu produk
 - [x] Konsolidasi useAuth() berulang di ProfilePage
 
-**Android (SDGS):**
+**Android (market-game):**
 - [x] Tambahkan game completion → mission report API
 - [x] Integrasi QuizViewModel dengan backend mission
 - [x] Integrasi TrashSortViewModel dengan backend mission

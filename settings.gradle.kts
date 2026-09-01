@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SDGS"
+rootProject.name = "market-game"
 include(":app")

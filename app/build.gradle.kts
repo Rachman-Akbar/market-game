@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.luminasdgs"
+    namespace = "com.example.marketgame"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.luminasdgs"
+        applicationId = "com.example.marketgame"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
