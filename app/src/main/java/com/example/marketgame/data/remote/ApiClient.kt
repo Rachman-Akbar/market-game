@@ -123,12 +123,12 @@ object ApiClient {
     }
 
     /**
-     * Attaches the Bearer token from SharedPreferences if available.
+     * Attaches the Bearer token from secure storage if available.
      * Token key must match what you save after login.
      */
     private fun authInterceptor(context: Context): Interceptor {
         return Interceptor { chain ->
-            val prefs = context.getSharedPreferences("api_config_prefs", Context.MODE_PRIVATE)
+            val prefs = SecurePrefs.open(context)
             val token = prefs.getString("auth_token", null)
 
             val request = if (!token.isNullOrEmpty()) {
@@ -147,11 +147,16 @@ object ApiClient {
     }
 
     /**
-     * Logs full request/response in DEBUG builds. Remove or silence in production.
+     * Logs request/response bodies ONLY in debug builds.
+     * Production builds never log payloads (avoids leaking auth tokens & PII).
      */
     private fun loggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
     }
 }

@@ -8,15 +8,17 @@ import android.content.SharedPreferences
  *
  * Flow:
  *   1. Call login() or register()
- *   2. On success, token is saved to SharedPreferences
+ *   2. On success, token is saved to an ENCRYPTED SharedPreferences
  *   3. ApiClient's authInterceptor automatically attaches the token to subsequent requests
  *   4. Call logout() to clear the token
+ *
+ * Storage note: token & user id are stored via [EncryptedSharedPreferences] so
+ * they are not readable in plain text from the device filesystem.
  */
 class AuthRepository(context: Context) {
 
     private val api = ApiClient.getInstance(context)
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("api_config_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = SecurePrefs.open(context)
 
     // ── Login ────────────────────────────────────────────────────────────
 
