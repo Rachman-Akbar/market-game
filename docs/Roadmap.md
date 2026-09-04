@@ -2,7 +2,7 @@
 
 ## Status Perubahan Terakhir
 
-Terakhir diperbarui: 29 Agustus 2026
+Terakhir diperbarui: 04 September 2026
 
 ### Perubahan yang Dilakukan
 
@@ -17,6 +17,10 @@ Terakhir diperbarui: 29 Agustus 2026
 - [x] Fix N+1 cart reader (bulk variant/attributes), dashboard & store-context SQL aggregate, eager-load hutang-piutang
 - [x] Verifikasi: 29 test PHPUnit green (82 assertions) — CRUD Catalog/Seller/Order + spreadsheet import/export + auth
 - [x] Verifikasi MidtransWebhookController tetap route LIVE (bukan dead code)
+- [x] Fitur PPOB (pulsa/data/token/tagihan): checkout digital + history transaksi terpadu
+- [x] Refactor "invoice" → **bukti pembayaran / receipt**: `ReceiptModel`/`ReceiptService`/`ReceiptController`, tabel `receipts`, endpoint `/api/v1/ppob/receipts*`
+- [x] Email bukti pembayaran (idempotent) ke email user setelah transaksi digital sukses
+- [x] Detail transaksi selalu tampil (termasuk SN/TRID untuk status non-sukses)
 
 **Frontend (market-frontend):**
 - [x] Fix LoadingScreen (spinner bukan null)
@@ -34,6 +38,7 @@ Terakhir diperbarui: 29 Agustus 2026
 - [x] Hapus 4 halaman mati (ProfileOrdersPage, OrdersPage re-export, 2 WishlistPage)
 - [x] `loading="lazy"` pada gambar kartu produk
 - [x] Konsolidasi useAuth() berulang di ProfilePage
+- [x] Halaman bukti pembayaran (`/ppob/receipt/:ref`) + riwayat transaksi terpadu (`/riwayat`)
 
 **Android (market-game):**
 - [x] Tambahkan game completion → mission report API
