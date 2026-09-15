@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.marketgame.data.dummy.TrashDummyData
 import com.example.marketgame.data.model.TrashItem
 import com.example.marketgame.data.remote.GameDataRepository
 import kotlinx.coroutines.launch
@@ -24,8 +23,13 @@ class TrashSortViewModel : ViewModel() {
         val y: Int
     )
 
-    private val trashPool: List<TrashItem> = TrashDummyData.items
+    private var trashPool: List<TrashItem> = emptyList()
     private var spawnCounter = 0
+
+    var isContentLoading by mutableStateOf(true)
+        private set
+    var contentError by mutableStateOf<String?>(null)
+        private set
 
     val spawned = mutableStateListOf<SpawnedTrash>()
 
@@ -55,6 +59,27 @@ class TrashSortViewModel : ViewModel() {
 
     var isGameOver by mutableStateOf(false)
         private set
+
+    init {
+        loadContent()
+    }
+
+    fun loadContent() {
+        viewModelScope.launch {
+            isContentLoading = true
+            contentError = null
+            GameDataRepository.getTrashItems()
+                .onSuccess { loaded ->
+                    trashPool = loaded
+                    resetGame()
+                    isContentLoading = false
+                }
+                .onFailure { e ->
+                    contentError = e.message ?: "Gagal memuat item sampah."
+                    isContentLoading = false
+                }
+        }
+    }
 
     fun addSpawnAt(x: Int, y: Int) {
         if (isGameOver || trashPool.isEmpty()) return

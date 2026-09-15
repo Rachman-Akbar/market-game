@@ -1,50 +1,146 @@
 package com.example.marketgame.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
-import com.example.marketgame.data.dummy.QuestDummyData
-import com.example.marketgame.data.model.Quest
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.marketgame.data.model.DailyMission
+import com.example.marketgame.data.remote.AuthRepository
+import com.example.marketgame.data.remote.GameDataRepository
+import com.example.marketgame.data.remote.GameSummaryResponse
+import kotlinx.coroutines.launch
 
-class HomeViewModel : ViewModel() {
-    val quests = mutableStateListOf<Quest>()
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    var xp by mutableStateOf(0)
+    private val authRepository = AuthRepository(application)
+
+    // ── Data dari database ────────────────────────────────────────────────
+
+    var userName by mutableStateOf("Petualang SDGs")
         private set
-    var coins by mutableStateOf(0)
+    var userEmail by mutableStateOf("")
         private set
-    var water by mutableStateOf(3)
+    var userInitials by mutableStateOf("P")
         private set
-    var fertilizer by mutableStateOf(2)
+    var isLoggedIn by mutableStateOf(false)
         private set
 
-    var rewardMessage by mutableStateOf<String?>(null)
+    var missions by mutableStateOf<List<DailyMission>>(emptyList())
         private set
+    var gameSummary by mutableStateOf<GameSummaryResponse?>(null)
+        private set
+
+    var isLoading by mutableStateOf(true)
+        private set
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
+    // ── Modal state (1 halaman utama) ─────────────────────────────────────
+
+    var showSettingsModal by mutableStateOf(false)
+        private set
+    var showGameMenuModal by mutableStateOf(false)
+        private set
+    var showMissionsModal by mutableStateOf(false)
+        private set
+
+    val completedMissionsToday: Int
+        get() = missions.count { it.isCompleted }
 
     init {
-        quests.addAll(QuestDummyData.quests)
+        loadHomeData()
     }
 
-    fun claimQuest(id: Int) {
-        val index = quests.indexOfFirst { it.id == id }
-        if (index == -1) return
+    fun loadHomeData() {
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
 
-        val quest = quests[index]
-        if (quest.isCompleted) return
+            isLoggedIn = authRepository.isLoggedIn()
+            if (isLoggedIn) {
+                authRepository.getProfile()
+                    .onSuccess { user ->
+                        userName = user.name
+                        userEmail = user.email
+                        userInitials = user.name
+                            .split(" ")
+                            .mapNotNull { it.firstOrNull() }
+                            .take(2)
+                            .joinToString("")
+                            .uppercase()
+                    }
+                    .onFailure { e ->
+                        errorMessage = e.message ?: "Gagal memuat profil."
+                    }
+            }
 
-        quests[index] = quest.copy(isCompleted = true)
-        // Update rewards and show feedback message for UI.
-        xp += quest.xpReward
-        coins += quest.coinReward
-        water += quest.waterReward
-        fertilizer += quest.fertilizerReward
+            GameDataRepository.getMyMissions()
+                .onSuccess { loaded -> missions = loaded.map { it.toDailyMission() } }
+                .onFailure { e -> errorMessage = e.message ?: "Gagal memuat misi harian." }
 
-        rewardMessage = "Reward didapat: +${quest.xpReward} XP, +${quest.coinReward} Coin, +${quest.waterReward} Air, +${quest.fertilizerReward} Pupuk"
+            GameDataRepository.getGameSummary()
+                .onSuccess { gameSummary = it }
+                .onFailure { gameSummary = null }
+
+            isLoading = false
+        }
     }
 
-    fun clearRewardMessage() {
-        rewardMessage = null
+    fun refresh() {
+        loadHomeData()
+        errorMessage = null
     }
+
+    fun openSettings() {
+        showSettingsModal = true
+    }
+
+    fun closeSettings() {
+        showSettingsModal = false
+    }
+
+    fun openGameMenu() {
+        showGameMenuModal = true
+    }
+
+    fun closeGameMenu() {
+        showGameMenuModal = false
+    }
+
+    fun openMissions() {
+        showMissionsModal = true
+    }
+
+    fun closeMissions() {
+        showMissionsModal = false
+    }
+
+    fun logout(onDone: () -> Unit) {
+        viewModelScope.launch {
+            authRepository.logout()
+            isLoggedIn = false
+            userName = "Petualang SDGs"
+            userEmail = ""
+            userInitials = "P"
+            missions = emptyList()
+            gameSummary = null
+            showSettingsModal = false
+            onDone()
+        }
+    }
+
+    // ── Mapping misi backend → model tampilan ─────────────────────────────
+
+    private fun com.example.marketgame.data.remote.MissionResponse.toDailyMission() = DailyMission(
+        id = id,
+        name = name,
+        description = description ?: "",
+        progressValue = progress_value,
+        targetValue = target_value,
+        progressPercent = (progress_percent ?: 0.0).toFloat() / 100f,
+        status = status ?: "in_progress",
+        voucherName = voucher?.name
+    )
 }

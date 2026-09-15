@@ -7,6 +7,7 @@ import retrofit2.http.*
 
 data class LoginRequest(val email: String, val password: String)
 data class RegisterRequest(val name: String, val email: String, val password: String, val password_confirmation: String)
+data class FirebaseLoginRequest(val role: String, val device_name: String)
 
 // Backend (identity/auth/password-login + password-register) mengembalikan
 // payload auth TANPA wrapper — top-level: {user, roles, active_role, store,
@@ -82,14 +83,52 @@ data class CategoryResponse(
 )
 
 // ── Mission (Engagement / Game Quests) ───────────────────────────────────
-
+// Dipetakan dari engagement/missions/me yang dikembalikan backend:
+// {id, name, code, description, event_type, target_value, progress_value,
+//  progress_percent, status, starts_at, ends_at, voucher_locked, voucher}.
 data class MissionResponse(
     val id: Int,
-    val title: String,
+    val name: String,
     val description: String?,
-    val points: Int,
-    val type: String?,
-    val status: String?
+    val code: String?,
+    val event_type: String?,
+    val target_value: Int,
+    val progress_value: Int,
+    val progress_percent: Double?,
+    val status: String?,
+    val starts_at: String?,
+    val ends_at: String?,
+    val voucher_locked: Boolean?,
+    val voucher: MissionVoucherResponse?,
+    // Alias lama agar layar yang lebih dulu ditulis tetap berfungsi.
+    val title: String? = null,
+    val points: Int = 0,
+    val type: String? = null
+)
+
+data class MissionVoucherResponse(
+    val id: Int,
+    val code: String?,
+    val name: String?,
+    val discount_type: String?,
+    val discount_value: Double?
+)
+
+// ── Game Content (konten soal dari database) ─────────────────────────────
+
+data class GameContentRow(
+    val id: Int,
+    val game_type: String?,
+    val title: String?,
+    val difficulty: String?,
+    val payload: Map<String, Any?>? = null
+)
+
+data class GameSummaryResponse(
+    val games_played: Int,
+    val correct_answers: Int,
+    val total_questions: Int,
+    val coins_earned: Int
 )
 
 data class GameCompletionRequest(val event_type: String, val value: Int)
@@ -203,6 +242,12 @@ interface ApiService {
     @POST("identity/auth/password-register")
     suspend fun register(@Body request: RegisterRequest): AuthPayloadResponse
 
+    @POST("identity/auth/firebase-login")
+    suspend fun firebaseLogin(
+        @Header("Authorization") authorization: String,
+        @Body body: FirebaseLoginRequest
+    ): AuthPayloadResponse
+
     @GET("identity/auth/me")
     suspend fun getMe(): AuthPayloadResponse
 
@@ -274,6 +319,15 @@ interface ApiService {
 
     @POST("engagement/games/report")
     suspend fun reportGame(@Body body: GameReportRequest): GameReportResponse
+
+    @GET("engagement/games/summary")
+    suspend fun getGameSummary(): ApiResponse<GameSummaryResponse>
+
+    @GET("engagement/game-content/{gameType}")
+    suspend fun getGameContent(
+        @Path("gameType") gameType: String,
+        @Query("difficulty") difficulty: String? = null
+    ): ApiResponse<List<GameContentRow>>
 
     // ── Users ────────────────────────────────────────────────────────────
 

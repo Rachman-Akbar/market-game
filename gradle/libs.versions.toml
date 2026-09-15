@@ -16,6 +16,9 @@ moshi = "1.15.1"
 loggingInterceptor = "4.12.0"
 datastorePreferences = "1.1.1"
 securityCrypto = "1.1.0-alpha06"
+firebaseAuth = "23.1.0"
+playServicesAuth = "21.2.0"
+coroutinesPlayServices = "1.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,6 +48,11 @@ moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "mo
 moshi-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+
+# Firebase Auth + Google Sign-In
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

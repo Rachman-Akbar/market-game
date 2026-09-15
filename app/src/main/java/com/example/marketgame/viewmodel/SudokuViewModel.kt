@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.marketgame.data.dummy.SudokuDummyData
+import com.example.marketgame.data.content.SudokuGenerator
 import com.example.marketgame.data.remote.GameDataRepository
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -41,7 +41,7 @@ class SudokuViewModel : ViewModel() {
 
     fun startGame(selectedDifficulty: String) {
         difficulty = selectedDifficulty
-        val (solution, puzzleGenerated) = SudokuDummyData.generatePuzzle(selectedDifficulty)
+        val (solution, puzzleGenerated) = SudokuGenerator.generatePuzzle(selectedDifficulty)
         // solution is kept locally for validation; board is what the user edits.
         puzzle = puzzleGenerated
         board = puzzleGenerated.toMutableList()
@@ -96,7 +96,7 @@ class SudokuViewModel : ViewModel() {
             message = "Lengkapi semua sel terlebih dahulu."
             return
         }
-        if (!SudokuDummyData.isValidSolution(board)) {
+        if (!SudokuGenerator.isValidSolution(board)) {
             message = "Solusi tidak valid. Periksa kembali baris, kolom, dan kotak."
             return
         }

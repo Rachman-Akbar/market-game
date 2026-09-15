@@ -27,17 +27,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.marketgame.data.dummy.MythFactDummyData
+import androidx.compose.runtime.produceState
+import com.example.marketgame.data.model.MythFactStatement
+import com.example.marketgame.data.remote.GameDataRepository
 
 @Composable
 fun MythFactAchievementScreen(navController: NavController) {
+    val statementsAll by produceState<List<MythFactStatement>>(initialValue = emptyList()) {
+        value = GameDataRepository.getMythFactStatements().getOrDefault(emptyList())
+    }
+
     val tabs = listOf("Mitos", "Fakta")
     var selectedTab by remember { mutableIntStateOf(0) }
 
     val items = if (selectedTab == 0) {
-        MythFactDummyData.items.filter { !it.isFact }
+        statementsAll.filter { !it.isFact }
     } else {
-        MythFactDummyData.items.filter { it.isFact }
+        statementsAll.filter { it.isFact }
     }
 
     LazyColumn(

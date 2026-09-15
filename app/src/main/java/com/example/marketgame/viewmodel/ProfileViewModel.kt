@@ -5,34 +5,27 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.marketgame.data.model.UserProfile
 import com.example.marketgame.data.remote.AuthRepository
+import com.example.marketgame.data.remote.GameDataRepository
 import com.example.marketgame.data.remote.UserResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Example ViewModel showing how to integrate the Retrofit networking layer.
- *
- * Before (dummy data):
- *   val profile = UserProfile(name = "Pejuang SDGs", level = 5, ...)
- *
- * After (API-connected):
- *   profile is loaded from the server via AuthRepository.getProfile()
- */
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
     private val authRepository = AuthRepository(application)
 
     private val _profile = MutableStateFlow(
         UserProfile(
-            name = "Pejuang SDGs",
+            name = "Petualang SDGs",
+            email = "",
+            avatar = null,
             level = 1,
             xp = 0,
             coins = 0,
             completedQuest = 0,
-            gamesPlayed = 0,
-            treeLevel = 1
+            gamesPlayed = 0
         )
     )
     val profile: StateFlow<UserProfile> = _profile.asStateFlow()
@@ -64,6 +57,32 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 .onFailure { e ->
                     _errorMessage.value = e.message ?: "Gagal memuat profil"
                 }
+
+            GameDataRepository.getMyMissions()
+                .onSuccess { missions ->
+                    _profile.value = _profile.value.copy(
+                        completedQuest = missions.count {
+                            it.status == "completed" || it.status == "rewarded"
+                        }
+                    )
+                }
+                .onFailure { e ->
+                    _errorMessage.value = e.message ?: "Gagal memuat misi"
+                }
+
+            GameDataRepository.getGameSummary()
+                .onSuccess { summary ->
+                    _profile.value = _profile.value.copy(
+                        gamesPlayed = summary.games_played,
+                        coins = summary.coins_earned,
+                        xp = summary.correct_answers,
+                        level = (summary.games_played / 5) + 1
+                    )
+                }
+                .onFailure { e ->
+                    _errorMessage.value = e.message ?: "Gagal memuat ringkasan permainan"
+                }
+
             _isLoading.value = false
         }
     }
@@ -85,14 +104,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun logout() {
+    fun logout(onDone: () -> Unit) {
         viewModelScope.launch {
             authRepository.logout()
             _isLoggedIn.value = false
             _profile.value = UserProfile(
-                name = "Guest", level = 1, xp = 0,
-                coins = 0, completedQuest = 0, gamesPlayed = 0, treeLevel = 1
+                name = "Guest", email = "", avatar = null, level = 1,
+                xp = 0, coins = 0, completedQuest = 0, gamesPlayed = 0
             )
+            onDone()
         }
     }
 
@@ -100,11 +120,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private fun UserResponse.toUserProfile() = UserProfile(
         name = name,
+        email = email,
+        avatar = avatar,
         level = 1,
         xp = 0,
         coins = 0,
         completedQuest = 0,
-        gamesPlayed = 0,
-        treeLevel = 1
+        gamesPlayed = 0
     )
 }

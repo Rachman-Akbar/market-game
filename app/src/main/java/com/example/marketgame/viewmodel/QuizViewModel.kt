@@ -5,15 +5,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.marketgame.data.dummy.QuizDummyData
 import com.example.marketgame.data.model.QuizQuestion
 import com.example.marketgame.data.remote.GameDataRepository
 import kotlinx.coroutines.launch
 
 class QuizViewModel : ViewModel() {
-    private val allQuestions = QuizDummyData.questions
+    private var allQuestions: List<QuizQuestion> = emptyList()
 
     var questions by mutableStateOf<List<QuizQuestion>>(emptyList())
+        private set
+    var isContentLoading by mutableStateOf(true)
+        private set
+    var contentError by mutableStateOf<String?>(null)
         private set
     var currentIndex by mutableStateOf(0)
         private set
@@ -37,11 +40,31 @@ class QuizViewModel : ViewModel() {
     val currentQuestion: QuizQuestion?
         get() = questions.getOrNull(currentIndex)
 
+    init {
+        loadContent()
+    }
+
+    fun loadContent() {
+        viewModelScope.launch {
+            isContentLoading = true
+            contentError = null
+            GameDataRepository.getQuizQuestions()
+                .onSuccess { loaded ->
+                    allQuestions = loaded
+                    isContentLoading = false
+                }
+                .onFailure { e ->
+                    contentError = e.message ?: "Gagal memuat soal kuis."
+                    isContentLoading = false
+                }
+        }
+    }
+
     fun startQuiz(difficulty: String) {
-        // Reset quiz state and load questions by difficulty.
-        questions = allQuestions.filter { it.difficulty == difficulty }.shuffled()
-        if (questions.isEmpty()) {
-            questions = allQuestions.shuffled()
+        val pool = if (allQuestions.isEmpty()) emptyList() else allQuestions
+        questions = pool.filter { it.difficulty == difficulty }.shuffled()
+        if (questions.isEmpty() && pool.isNotEmpty()) {
+            questions = pool.shuffled()
         }
         currentIndex = 0
         score = 0

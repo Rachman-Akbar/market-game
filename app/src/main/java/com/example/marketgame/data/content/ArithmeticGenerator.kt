@@ -1,9 +1,9 @@
-package com.example.marketgame.data.dummy
+package com.example.marketgame.data.content
 
 import com.example.marketgame.data.model.ArithmeticQuestion
 import kotlin.random.Random
 
-object ArithmeticDummyData {
+object ArithmeticGenerator {
 
     fun generateQuestions(difficulty: String, count: Int = 15): List<ArithmeticQuestion> {
         return (1..count).map { generate(difficulty) }

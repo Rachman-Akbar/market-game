@@ -2,14 +2,9 @@ package com.example.marketgame.navigation
 
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
-    data object OnboardingLearn : Screen("onboarding_learn")
-    data object OnboardingRewards : Screen("onboarding_rewards")
-    data object OnboardingImpact : Screen("onboarding_impact")
+    data object Login : Screen("login")
+    data object Register : Screen("register")
     data object Home : Screen("home")
-    data object Actions : Screen("actions")
-    data object Game : Screen("game")
-    data object Tree : Screen("tree")
-    data object Rewards : Screen("rewards")
     data object Profile : Screen("profile")
     data object Quiz : Screen("quiz")
     data object TrashSort : Screen("trash_sort")
@@ -27,4 +22,5 @@ sealed class Screen(val route: String) {
     }
     data object AchievementMythFact : Screen("achievement_myth_fact")
     data object AchievementTrashSort : Screen("achievement_trash_sort")
+    data object ApiSettings : Screen("api_settings")
 }

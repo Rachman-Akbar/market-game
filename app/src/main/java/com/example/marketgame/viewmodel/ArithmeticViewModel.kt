@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.marketgame.data.dummy.ArithmeticDummyData
+import com.example.marketgame.data.content.ArithmeticGenerator
 import com.example.marketgame.data.model.ArithmeticQuestion
 import com.example.marketgame.data.remote.GameDataRepository
 import kotlinx.coroutines.launch
@@ -49,7 +49,7 @@ class ArithmeticViewModel : ViewModel() {
 
     fun startGame(selectedDifficulty: String) {
         difficulty = selectedDifficulty
-        questions = ArithmeticDummyData.generateQuestions(selectedDifficulty)
+        questions = ArithmeticGenerator.generateQuestions(selectedDifficulty)
         currentIndex = 0
         score = 0
         correctCount = 0

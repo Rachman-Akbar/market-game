@@ -11,123 +11,171 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.FactCheck
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Style
+import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.marketgame.data.model.DailyMission
+import com.example.marketgame.navigation.Screen
+import com.example.marketgame.ui.theme.BluePrimary
+import com.example.marketgame.ui.theme.GreenPrimary
+import com.example.marketgame.ui.theme.YellowAccent
 import com.example.marketgame.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val heroName = "Alex Verdant"
-    val levelTitle = "Guardian of the Grove"
-    val levelValue = 14
-    val levelProgress = 0.85f
-    val dailyStreak = 7
-    val communityProgress = 0.7f
-    val realActions = listOf(
-        HomeActionPreview(
-            title = "Pakai transportasi umum",
-            description = "Hemat emisi dan dapatkan bonus kecil kalau kamu melakukannya hari ini.",
-            reward = "+20 XP • +5 HK",
-            accent = Color(0xFF2E7D32)
-        ),
-        HomeActionPreview(
-            title = "Bawa botol minum sendiri",
-            description = "Satu aksi sederhana yang bisa langsung menambah poin kebiasaan hijau.",
-            reward = "+10 XP • +1 Air",
-            accent = Color(0xFF1565C0)
-        )
-    )
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel = viewModel()
+) {
+    val vm = viewModel
 
-    LaunchedEffect(viewModel.rewardMessage) {
-        val message = viewModel.rewardMessage
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.clearRewardMessage()
-        }
-    }
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding),
+                .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 120.dp)
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 32.dp)
         ) {
             item {
-                HomeTopBar(
-                    xp = viewModel.xp,
-                    coins = viewModel.coins
+                HomeHeader(
+                    initials = vm.userInitials,
+                    name = vm.userName,
+                    email = vm.userEmail,
+                    onOpenSettings = { vm.openSettings() }
                 )
             }
 
             item {
-                GreetingSection(heroName = heroName)
-            }
-
-            item {
-                LevelProgressCard(
-                    level = levelValue,
-                    title = levelTitle,
-                    progress = levelProgress
+                HeroPlayCard(
+                    userName = vm.userName,
+                    completedMissions = vm.completedMissionsToday,
+                    totalMissions = vm.missions.size,
+                    onPlay = { vm.openGameMenu() },
+                    onOpenMissions = { vm.openMissions() }
                 )
             }
 
             item {
-                BentoStatsRow(
-                    streakDays = dailyStreak,
-                    communityProgress = communityProgress
+                StatsRow(
+                    gamesPlayed = vm.gameSummary?.games_played ?: 0,
+                    coinsEarned = vm.gameSummary?.coins_earned ?: 0,
+                    missionsDone = vm.completedMissionsToday
                 )
             }
 
             item {
-                RealActionsPreviewSection(actions = realActions)
+                DailyMissionsPreview(
+                    missions = vm.missions,
+                    onOpenMissions = { vm.openMissions() }
+                )
             }
 
             item {
-                FeaturedGoalCard()
+                GamesSection(onPlay = { vm.openGameMenu() })
             }
+        }
+
+        if (vm.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        if (vm.showGameMenuModal) {
+            ChooseGameDialog(
+                onDismiss = { vm.closeGameMenu() },
+                onSelect = { route ->
+                    vm.closeGameMenu()
+                    navController.navigate(route)
+                }
+            )
+        }
+
+        if (vm.showMissionsModal) {
+            MissionsDialog(
+                missions = vm.missions,
+                onDismiss = { vm.closeMissions() }
+            )
+        }
+
+        if (vm.showSettingsModal) {
+            SettingsDialog(
+                name = vm.userName,
+                email = vm.userEmail,
+                onDismiss = { vm.closeSettings() },
+                onOpenProfile = { vm.closeSettings(); navController.navigate(Screen.Profile.route) },
+                onOpenAchievements = { vm.closeSettings(); navController.navigate(Screen.AchievementHub.route) },
+                onOpenVouchers = { vm.closeSettings(); navController.navigate(Screen.Vouchers.route) },
+                onOpenApiSettings = { vm.closeSettings(); navController.navigate(Screen.ApiSettings.route) },
+                onLogout = {
+                    vm.logout {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-private fun HomeTopBar(xp: Int, coins: Int) {
+private fun HomeHeader(
+    initials: String,
+    name: String,
+    email: String,
+    onOpenSettings: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -136,387 +184,663 @@ private fun HomeTopBar(xp: Int, coins: Int) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(52.dp)
                     .clip(CircleShape)
                     .background(
-                        Brush.linearGradient(
-                            colors = listOf(Color(0xFFB7EFC5), Color(0xFF2E7D32))
-                        )
+                        Brush.linearGradient(listOf(Color(0xFFB7EFC5), GreenPrimary))
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                androidx.compose.material3.Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = null,
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.size(12.dp))
-            Text(
-                text = "Hero Quest",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Surface(
-            shape = RoundedCornerShape(999.dp),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
-        ) {
-            Text(
-                text = "${xp} XP \u2022 ${coins} HK",
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-@Composable
-private fun GreetingSection(heroName: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = "WELCOME BACK, HERO",
-            fontSize = 11.sp,
-            letterSpacing = 1.2.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-        Text(
-            text = heroName,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-private fun LevelProgressCard(level: Int, title: String, progress: Float) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = RoundedCornerShape(999.dp),
-                        color = Color(0xFFB2DFDB)
-                    ) {
-                        Text(
-                            text = "LEVEL $level",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0B5345)
-                        )
-                    }
-                    Spacer(modifier = Modifier.size(10.dp))
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
                 Text(
-                    text = "${(progress * 1000).toInt()}/1000 XP",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    text = initials,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
                 )
             }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(progress.coerceIn(0f, 1f))
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    Color(0xFFA5D6A7)
-                                )
-                            )
-                        )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BentoStatsRow(streakDays: Int, communityProgress: Float) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE082)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Filled.LocalFireDepartment,
-                        contentDescription = null,
-                        tint = Color(0xFF8D6E00)
-                    )
-                    Text(
-                        text = streakDays.toString(),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4E2A00)
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
                 Text(
-                    text = "DAY STREAK",
-                    fontSize = 10.sp,
-                    letterSpacing = 1.sp,
-                    color = Color(0xFF5D4B00)
+                    text = "Halo, $name!",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = "Keep it up, you're on fire!",
-                    fontSize = 11.sp,
-                    color = Color(0xFF6B5A00)
-                )
-            }
-        }
-
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        progress = communityProgress.coerceIn(0f, 1f),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                        strokeWidth = 8.dp,
-                        modifier = Modifier.size(72.dp)
-                    )
+                if (email.isNotBlank()) {
                     Text(
-                        text = "${(communityProgress * 100).toInt()}%",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Text(
-                    text = "COMMUNITY: REFOREST",
-                    fontSize = 10.sp,
-                    letterSpacing = 1.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RealActionsPreviewSection(actions: List<HomeActionPreview>) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Aksi Nyata Pilihan",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = "LIHAT SEMUA",
-                fontSize = 11.sp,
-                letterSpacing = 1.sp,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable(enabled = false) {}
-            )
-        }
-
-        actions.forEach { action ->
-            Card(
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(action.accent.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            androidx.compose.material3.Icon(
-                                imageVector = Icons.Filled.Public,
-                                contentDescription = null,
-                                tint = action.accent
-                            )
-                        }
-                        Text(
-                            text = action.reward,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = action.accent
-                        )
-                    }
-
-                    Text(
-                        text = action.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = action.description,
+                        text = email,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
             }
         }
+
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 3.dp,
+            modifier = Modifier.clickable { onOpenSettings() }
+        ) {
+            IconButton(onClick = onOpenSettings) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Pengaturan",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun FeaturedGoalCard() {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-            text = "Global Goal of the Week",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(190.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFF1B5E20), Color(0xFF8BC34A))
-                    )
-                )
-        ) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xCC0B1F0E))
-                        )
-                    )
-            )
-
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(999.dp),
-                    color = MaterialTheme.colorScheme.primary
-                ) {
-                    Text(
-                        text = "SDG 15 \u2022 LIFE ON LAND",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
+private fun HeroPlayCard(
+    userName: String,
+    completedMissions: Int,
+    totalMissions: Int,
+    onPlay: () -> Unit,
+    onOpenMissions: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = GreenPrimary),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Protect Our Ancient Forests",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    text = "BERMAIN & BELAJAR",
+                    fontSize = 11.sp,
+                    letterSpacing = 1.2.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = "Siap beraksi untuk bumi hari ini?",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = Color.White
                 )
                 Text(
-                    text = "Learn how your actions contribute to local reforestation efforts this month.",
-                    fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.8f)
+                    text = "Pilih game seru dan selesaikan misi harianmu, $userName!",
+                    fontSize = 13.sp,
+                    color = Color.White.copy(alpha = 0.85f)
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFB0BEC5))
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .offset(x = (-6).dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF90A4AE))
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .offset(x = (-12).dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF78909C))
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(
-                        text = "12,402 heroes contributing",
-                        fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.85f)
-                    )
-                }
             }
 
-            androidx.compose.material3.Icon(
-                imageVector = Icons.Filled.Public,
-                contentDescription = null,
-                tint = Color.White.copy(alpha = 0.12f),
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color.White,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onPlay() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SportsEsports,
+                            contentDescription = null,
+                            tint = GreenPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Main Game",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = GreenPrimary
+                        )
+                    }
+                }
+
+                if (totalMissions > 0) {
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = YellowAccent,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onOpenMissions() }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.TaskAlt,
+                                contentDescription = null,
+                                tint = Color(0xFF6E5100)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "$completedMissions/$totalMissions Misi",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6E5100)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatsRow(gamesPlayed: Int, coinsEarned: Int, missionsDone: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MiniStatCard(
+            label = "GAME DIMAIN",
+            value = gamesPlayed.toString(),
+            color = BluePrimary,
+            icon = Icons.Filled.SportsEsports,
+            modifier = Modifier.weight(1f)
+        )
+        MiniStatCard(
+            label = "KOIN DIDAPAT",
+            value = coinsEarned.toString(),
+            color = Color(0xFFF9A825),
+            icon = Icons.Filled.Star,
+            modifier = Modifier.weight(1f)
+        )
+        MiniStatCard(
+            label = "MISI SELESAI",
+            value = missionsDone.toString(),
+            color = GreenPrimary,
+            icon = Icons.Filled.EmojiEvents,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun MiniStatCard(
+    label: String,
+    value: String,
+    color: Color,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 14.dp, horizontal = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(12.dp)
-                    .size(60.dp)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+            }
+            Text(
+                text = value,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = label,
+                fontSize = 9.sp,
+                letterSpacing = 0.8.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center
             )
         }
     }
 }
 
-private data class HomeActionPreview(
+@Composable
+private fun DailyMissionsPreview(
+    missions: List<DailyMission>,
+    onOpenMissions: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionTitle(title = "Misi Harian", onOpen = onOpenMissions)
+
+        if (missions.isEmpty()) {
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Text(
+                    text = "Belum ada misi hari ini. Yuk main game dulu!",
+                    modifier = Modifier.padding(16.dp),
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
+        } else {
+            missions.take(3).forEach { mission ->
+                MissionRow(mission = mission, onClick = onOpenMissions)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MissionRow(mission: DailyMission, onClick: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (mission.isCompleted) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = if (mission.isCompleted) GreenPrimary else YellowAccent.copy(alpha = 0.5f)
+            ) {
+                Icon(
+                    imageVector = if (mission.isCompleted) Icons.Filled.TaskAlt else Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = if (mission.isCompleted) Color.White else Color(0xFF6E5100),
+                    modifier = Modifier.padding(8.dp).size(18.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = mission.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    if (mission.voucherName != null) {
+                        Text(
+                            text = "Hadiah: ${mission.voucherName}",
+                            fontSize = 10.sp,
+                            color = GreenPrimary
+                        )
+                    }
+                }
+                LinearProgressIndicator(
+                    progress = { mission.progressPercent.coerceIn(0f, 1f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(999.dp)),
+                    color = if (mission.isCompleted) GreenPrimary else BluePrimary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+                Text(
+                    text = if (mission.isCompleted) "Selesai!" else "${mission.progressValue}/${mission.targetValue} ${mission.description}",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GamesSection(onPlay: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionTitle(title = "Pilih Game")
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 3.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onPlay() }
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(listOf(BluePrimary, GreenPrimary))
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SportsEsports,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Buka Menu Game",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "7 game edukasi siap dimainkan",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                Icon(
+                    imageVector = Icons.Filled.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(title: String, onOpen: (() -> Unit)? = null) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (onOpen != null) {
+            Text(
+                text = "LIHAT SEMUA",
+                fontSize = 11.sp,
+                letterSpacing = 1.sp,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable { onOpen() }
+            )
+        }
+    }
+}
+
+// ── Game selection modal ──────────────────────────────────────────────────
+
+private data class GameEntry(
     val title: String,
-    val description: String,
-    val reward: String,
-    val accent: Color
+    val subtitle: String,
+    val icon: ImageVector,
+    val color: Color,
+    val route: String
 )
+
+private val gameEntries = listOf(
+    GameEntry("Kuis SDG", "Jawab soal tentang tujuan pembangunan berkelanjutan", Icons.Filled.Quiz, GreenPrimary, Screen.Quiz.route),
+    GameEntry("Pilah Sampah", "Tarik-taruh sampah ke tong yang tepat", Icons.Filled.Delete, Color(0xFF2E7D32), Screen.TrashSort.route),
+    GameEntry("Pasang Kartu SDG", "Cocokkan pernyataan dengan SDG-nya", Icons.Filled.Style, BluePrimary, Screen.MatchCard.route),
+    GameEntry("Myth & Fact", "Tebak benar atau mitos", Icons.Filled.FactCheck, Color(0xFF8E24AA), Screen.MythFact.route),
+    GameEntry("Clean River", "Bersihkan sungai dari sampah", Icons.Filled.Waves, Color(0xFF0277BD), Screen.CleanRiver.route),
+    GameEntry("Arithmetic Kilat", "Hitung cepat dalam hitungan detik", Icons.Filled.Calculate, Color(0xFFEF6C00), Screen.ArithmeticKilat.route),
+    GameEntry("Sudoku", "Isi angka tanpa berulang", Icons.Filled.GridOn, Color(0xFF00695C), Screen.Sudoku.route)
+)
+
+@Composable
+private fun ChooseGameDialog(
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(
+                    text = "Pilih Game",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Semua game gratis dan cocok untuk semua umur.",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.height(390.dp)
+                ) {
+                    items(gameEntries) { game ->
+                        GameTile(game = game, onClick = { onSelect(game.route) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameTile(game: GameEntry, onClick: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = game.color.copy(alpha = 0.12f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(game.color),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = game.icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+            }
+            Text(
+                text = game.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = game.subtitle,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                maxLines = 2
+            )
+        }
+    }
+}
+
+// ── Missions modal ─────────────────────────────────────────────────────────
+
+@Composable
+private fun MissionsDialog(
+    missions: List<DailyMission>,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Misi Harian",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "${missions.count { it.isCompleted }}/${missions.size} selesai",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Filled.School,
+                            contentDescription = "Tutup",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                if (missions.isEmpty()) {
+                    Text(
+                        text = "Belum ada misi aktif hari ini.",
+                        modifier = Modifier.padding(vertical = 20.dp),
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(missions) { mission ->
+                            MissionRow(mission = mission) {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Settings modal ─────────────────────────────────────────────────────────
+
+@Composable
+private fun SettingsDialog(
+    name: String,
+    email: String,
+    onDismiss: () -> Unit,
+    onOpenProfile: () -> Unit,
+    onOpenAchievements: () -> Unit,
+    onOpenVouchers: () -> Unit,
+    onOpenApiSettings: () -> Unit,
+    onLogout: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(Color(0xFFB7EFC5), GreenPrimary))),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = name.split(" ").mapNotNull { it.firstOrNull() }.take(2).joinToString("").uppercase(),
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = email,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                SettingsOption("Profil Saya", Icons.Filled.School, onOpenProfile)
+                SettingsOption("Pencapaian Game", Icons.Filled.EmojiEvents, onOpenAchievements)
+                SettingsOption("Voucher Saya", Icons.Filled.Star, onOpenVouchers)
+                SettingsOption("Pengaturan Koneksi API", Icons.Filled.Settings, onOpenApiSettings)
+
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFFFEBEE),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onLogout() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Logout,
+                            contentDescription = null,
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Keluar",
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFD32F2F)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsOption(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFF4FBF6))
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(text = label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+        }
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+        )
+    }
+}

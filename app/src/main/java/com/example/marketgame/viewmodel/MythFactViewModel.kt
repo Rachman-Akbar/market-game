@@ -6,40 +6,58 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.marketgame.data.dummy.MythFactDummyData
 import com.example.marketgame.data.model.MythFactStatement
 import com.example.marketgame.data.remote.GameDataRepository
 import kotlinx.coroutines.launch
 
 class MythFactViewModel : ViewModel() {
-    private var statements: List<MythFactStatement> = MythFactDummyData.items.shuffled()
+    private var loadedStatements: List<MythFactStatement> = emptyList()
+    private var statements: List<MythFactStatement> = emptyList()
 
+    var isContentLoading by mutableStateOf(true)
+        private set
+    var contentError by mutableStateOf<String?>(null)
+        private set
     var currentIndex by mutableIntStateOf(0)
         private set
-
     var score by mutableIntStateOf(0)
         private set
-
     var lives by mutableIntStateOf(3)
         private set
-
     var correctCount by mutableIntStateOf(0)
         private set
-
     var wrongCount by mutableIntStateOf(0)
         private set
-
     var lastAnswerCorrect by mutableStateOf<Boolean?>(null)
         private set
-
     var isCompleted by mutableStateOf(false)
         private set
-
     var isGameOver by mutableStateOf(false)
         private set
 
     val currentStatement: MythFactStatement?
         get() = statements.getOrNull(currentIndex)
+
+    init {
+        loadContent()
+    }
+
+    fun loadContent() {
+        viewModelScope.launch {
+            isContentLoading = true
+            contentError = null
+            GameDataRepository.getMythFactStatements()
+                .onSuccess { loaded ->
+                    loadedStatements = loaded
+                    resetGame()
+                    isContentLoading = false
+                }
+                .onFailure { e ->
+                    contentError = e.message ?: "Gagal memuat pernyataan Myth & Fact."
+                    isContentLoading = false
+                }
+        }
+    }
 
     fun answer(isFactSelected: Boolean) {
         if (isGameOver) return
@@ -77,7 +95,7 @@ class MythFactViewModel : ViewModel() {
     }
 
     fun resetGame() {
-        statements = MythFactDummyData.items.shuffled()
+        statements = loadedStatements.ifEmpty { emptyList() }.shuffled()
         currentIndex = 0
         score = 0
         correctCount = 0

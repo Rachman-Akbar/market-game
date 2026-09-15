@@ -32,14 +32,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.runtime.produceState
 import com.example.marketgame.R
-import com.example.marketgame.data.dummy.SdgDummyData
+import com.example.marketgame.data.model.SdgGoal
+import com.example.marketgame.data.model.SdgStatement
+import com.example.marketgame.data.remote.GameDataRepository
 import com.example.marketgame.navigation.Screen
 import com.example.marketgame.ui.components.SdgImageTile
 
 @Composable
 fun MatchCardAchievementScreen(navController: NavController) {
-    val sdgs = SdgDummyData.goals.map { goal ->
+    val deck by produceState<Pair<List<SdgGoal>, List<SdgStatement>>>(
+        initialValue = emptyList<SdgGoal>() to emptyList<SdgStatement>()
+    ) {
+        value = GameDataRepository.getMatchCardDeck().getOrDefault(emptyList<SdgGoal>() to emptyList<SdgStatement>())
+    }
+    val goals = deck.first
+
+    val sdgs = goals.map { goal ->
         SdgCardItem(
             id = goal.id,
             title = goal.title,
@@ -92,8 +102,16 @@ fun MatchCardAchievementDetailScreen(
     val tabs = listOf("Pernyataan", "Masalah", "Solusi")
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    val goal = SdgDummyData.goals.firstOrNull { it.id == sdgId }
-    val relatedTexts = SdgDummyData.statements.filter { it.goalId == sdgId }
+    val deck by produceState<Pair<List<SdgGoal>, List<SdgStatement>>>(
+        initialValue = emptyList<SdgGoal>() to emptyList<SdgStatement>()
+    ) {
+        value = GameDataRepository.getMatchCardDeck().getOrDefault(emptyList<SdgGoal>() to emptyList<SdgStatement>())
+    }
+    val goals = deck.first
+    val statements = deck.second
+
+    val goal = goals.firstOrNull { it.id == sdgId }
+    val relatedTexts = statements.filter { it.goalId == sdgId }
 
     val statement = relatedTexts
         .firstOrNull { it.text.startsWith("Pernyataan:") }

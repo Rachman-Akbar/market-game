@@ -2,6 +2,7 @@ package com.example.marketgame.data.remote
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -15,7 +16,8 @@ import kotlinx.coroutines.flow.map
  *
  * Supports three strategies (in priority order):
  * 1. User-configured URL via Settings UI (persisted in DataStore)
- * 2. Build-time default (hardcoded fallback)
+ * 2. Automatic default: emulator -> 10.0.2.2, physical device -> 127.0.0.1
+ *    (relies on `adb reverse tcp:8000 tcp:8000` so device-localhost maps to the PC)
  *
  * Usage:
  *   val baseUrl = BaseUrlManager.getInstance(context).getBaseUrl()
@@ -34,7 +36,11 @@ class BaseUrlManager private constructor(private val context: Context) {
 
         // Build-time defaults -- change these per environment
         private const val DEFAULT_EMULATOR_URL = "http://10.0.2.2:8000/api/v1/"
-        private const val DEFAULT_LOCAL_DEVICE_URL = "http://192.168.1.100:8000/api/v1/"
+        // Physical device: works automatically with `adb reverse tcp:8000 tcp:8000`
+        // (USB or wireless adb). No LAN IP needed.
+        private const val DEFAULT_DEVICE_URL = "http://127.0.0.1:8000/api/v1/"
+        // Standalone fallback (no adb): set to your PC's LAN IP.
+        private const val DEFAULT_LOCAL_DEVICE_URL = "http://192.168.100.129:8000/api/v1/"
         private const val DEFAULT_PRODUCTION_URL = "https://your-production-domain.com/api/v1/"
 
         private val KEY_CUSTOM_BASE_URL = stringPreferencesKey("custom_base_url")
@@ -110,7 +116,17 @@ class BaseUrlManager private constructor(private val context: Context) {
                 return Environment.valueOf(envName).baseUrl
             } catch (_: Exception) { /* fall through */ }
         }
-        return DEFAULT_EMULATOR_URL
+        return if (isEmulator()) DEFAULT_EMULATOR_URL else DEFAULT_DEVICE_URL
+    }
+
+    private fun isEmulator(): Boolean {
+        val fingerprint = Build.FINGERPRINT
+        return fingerprint.startsWith("generic") ||
+            fingerprint.contains("emulator") ||
+            Build.MODEL.contains("Emulator") ||
+            Build.MODEL.contains("sdk_gphone") ||
+            Build.PRODUCT.contains("sdk_gphone") ||
+            Build.BRAND.startsWith("generic")
     }
 
     private fun normalizeUrl(url: String): String {

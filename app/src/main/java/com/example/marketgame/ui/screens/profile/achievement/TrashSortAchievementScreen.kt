@@ -28,12 +28,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.marketgame.data.dummy.TrashDummyData
+import androidx.compose.runtime.produceState
+import com.example.marketgame.data.model.TrashItem
+import com.example.marketgame.data.remote.GameDataRepository
 
 @Composable
 fun TrashSortAchievementScreen(navController: NavController) {
+    val trashItems by produceState<List<TrashItem>>(initialValue = emptyList()) {
+        value = GameDataRepository.getTrashItems().getOrDefault(emptyList())
+    }
+
     val order = listOf("Plastik", "B3", "Organik", "Kertas", "Residu")
-    val grouped = TrashDummyData.items.groupBy { it.category }
+    val grouped = trashItems.groupBy { it.category }
     val categories = order.mapNotNull { label ->
         grouped[label]?.let { items ->
             TrashCategory(label.uppercase(), binColor(label), items.map { it.name })

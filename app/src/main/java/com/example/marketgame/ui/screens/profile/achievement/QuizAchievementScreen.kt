@@ -36,18 +36,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.marketgame.data.dummy.QuizDummyData
+import androidx.compose.runtime.produceState
 import com.example.marketgame.data.model.QuizQuestion
+import com.example.marketgame.data.remote.GameDataRepository
 
 @Composable
 fun QuizAchievementScreen(navController: NavController) {
+    val questions by produceState<List<QuizQuestion>>(initialValue = emptyList()) {
+        value = GameDataRepository.getQuizQuestions().getOrDefault(emptyList())
+    }
+
     val difficultyOrder = listOf("Mudah", "Sedang", "Sulit")
     val tabs = difficultyOrder.filter { level ->
-        QuizDummyData.questions.any { it.difficulty.equals(level, ignoreCase = true) }
+        questions.any { it.difficulty.equals(level, ignoreCase = true) }
     }
     var selectedTab by remember { mutableIntStateOf(0) }
     val selectedDifficulty = tabs.getOrNull(selectedTab) ?: tabs.firstOrNull().orEmpty()
-    val items = QuizDummyData.questions.filter { it.difficulty.equals(selectedDifficulty, ignoreCase = true) }
+    val items = questions.filter { it.difficulty.equals(selectedDifficulty, ignoreCase = true) }
 
     LazyColumn(
         modifier = Modifier

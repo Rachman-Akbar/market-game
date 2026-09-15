@@ -1,8 +1,8 @@
-package com.example.marketgame.data.dummy
+package com.example.marketgame.data.content
 
 import kotlin.random.Random
 
-object SudokuDummyData {
+object SudokuGenerator {
 
     fun generatePuzzle(difficulty: String): Pair<List<Int>, List<Int>> {
         val solution = generateSolvedGrid()
@@ -16,11 +16,7 @@ object SudokuDummyData {
         var removed = 0
         for (pos in positions) {
             if (removed >= 81 - clues) break
-            val backup = puzzle[pos]
             puzzle[pos] = 0
-            // keep the puzzle uniquely solvable-ish by not breaking the solution;
-            // a simple uniqueness check would be heavy, so we guarantee the
-            // original solution remains valid for the player to fill.
             removed++
         }
         return solution to puzzle

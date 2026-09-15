@@ -1,6 +1,7 @@
 package com.example.marketgame.ui.screens.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,24 +11,24 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Eco
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Stars
-import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,14 +40,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.marketgame.navigation.Screen
+import com.example.marketgame.ui.theme.GreenPrimary
 import com.example.marketgame.viewmodel.ProfileViewModel
 
 @Composable
@@ -55,11 +57,12 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel()
 ) {
     val profile by viewModel.profile.collectAsState()
+
     val stats = listOf(
-        StatItem("XP EARNED", "12,450", Icons.Filled.TaskAlt, Color(0xFF4CAF50)),
-        StatItem("TOTAL HK", "2,840", Icons.Filled.TaskAlt, Color(0xFFF9A825)),
-        StatItem("TREES GROWN", "14", Icons.Filled.TaskAlt, Color(0xFF26A69A)),
-        StatItem("ACTIONS DONE", "89", Icons.Filled.TaskAlt, Color(0xFF2E7D32))
+        StatItem("JAWABAN BENAR", profile.xp.toString(), Icons.Filled.Star, Color(0xFF4CAF50)),
+        StatItem("KOIN DIDAPAT", profile.coins.toString(), Icons.Filled.EmojiEvents, Color(0xFFF9A825)),
+        StatItem("GAME DIMAIN", profile.gamesPlayed.toString(), Icons.Filled.SportsEsports, Color(0xFF0288D1)),
+        StatItem("MISI SELESAI", profile.completedQuest.toString(), Icons.Filled.Star, Color(0xFF2E7D32))
     )
 
     LazyColumn(
@@ -67,14 +70,14 @@ fun ProfileScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 20.dp, bottom = 120.dp)
+        contentPadding = PaddingValues(top = 20.dp, bottom = 40.dp)
     ) {
         item {
-            ProfileTopBar()
+            ProfileTopBar(onBack = { navController?.popBackStack() })
         }
 
         item {
-            ProfileHeroCard(profileName = profile.name)
+            ProfileHeroCard(profile = profile)
         }
 
         item {
@@ -90,46 +93,39 @@ fun ProfileScreen(
         }
 
         item {
-            AccountSettingsSection()
+            AccountSettingsSection(
+                onOpenApiSettings = { navController?.navigate(Screen.ApiSettings.route) },
+                onLogout = {
+                    viewModel.logout {
+                        navController?.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Profile.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-private fun ProfileTopBar() {
+private fun ProfileTopBar(onBack: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFB2DFDB)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(imageVector = Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Kembali",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
-            Spacer(modifier = Modifier.size(10.dp))
             Text(
-                text = "Hero Quest",
+                text = "Profil Saya",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Surface(
-            shape = RoundedCornerShape(999.dp),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Text(
-                text = "1,250 XP \u2022 450 HK",
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary
             )
         }
@@ -137,11 +133,11 @@ private fun ProfileTopBar() {
 }
 
 @Composable
-private fun ProfileHeroCard(profileName: String) {
+private fun ProfileHeroCard(profile: com.example.marketgame.data.model.UserProfile) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(
             modifier = Modifier
@@ -157,49 +153,54 @@ private fun ProfileHeroCard(profileName: String) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(200.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White),
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(listOf(Color(0xFFB7EFC5), GreenPrimary))
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = "https://lh3.googleusercontent.com/aida-public/AB6AXuCZJuHIwuGJ6tdeX0LBZWt0bfxc1Cs3NyWCeaKs6T0pFzQpdSil9LC7Q80du3ldkj2OCuyKgxRJ2exGXlKn8jOnFBhPSHgP0nyCVir4rrruG6cNq8Mga6qwahriY9PttIlXc1-Zj-8HlbjiYan341ozIyP9AbxQqKPmovpAPAF0PI7NMqjOKndTxW8X3XbbcPM53B9_H3x6o7-3-NGTfqON07_oZuKmpsxJzWa_Iku3CO8n0LG890TYDAzHdsX2XdGKvNopS2C3YQ",
-                    contentDescription = "Hero avatar",
-                    modifier = Modifier.size(180.dp),
-                    contentScale = ContentScale.Fit
-                )
-
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp),
-                    color = Color(0xFFFFE082),
-                    shape = RoundedCornerShape(999.dp),
-                    shadowElevation = 6.dp
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(imageVector = Icons.Filled.Eco, contentDescription = null, tint = Color(0xFF6E5100))
-                        Spacer(modifier = Modifier.size(4.dp))
-                        Text(text = "ECO HERO", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6E5100))
-                    }
+                if (profile.avatar.isNullOrBlank()) {
+                    Text(
+                        text = profile.name.split(" ").mapNotNull { it.firstOrNull() }.take(2).joinToString("").uppercase(),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
+                } else {
+                    AsyncImage(
+                        model = profile.avatar,
+                        contentDescription = "Avatar",
+                        modifier = Modifier.size(96.dp)
+                    )
                 }
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Guardian Leaf",
-                    fontSize = 26.sp,
+                    text = profile.name,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Level 24 Master Sustainer",
+                    text = if (profile.email.isBlank()) "Petualang SDGs" else profile.email,
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
+                Spacer(modifier = Modifier.size(6.dp))
+                Surface(
+                    shape = RoundedCornerShape(999.dp),
+                    color = Color(0xFFFFE082)
+                ) {
+                    Text(
+                        text = "LEVEL ${profile.level}",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF6E5100)
+                    )
+                }
             }
         }
     }
@@ -225,7 +226,7 @@ private fun StatCard(item: StatItem, modifier: Modifier = Modifier) {
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -234,7 +235,7 @@ private fun StatCard(item: StatItem, modifier: Modifier = Modifier) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
                     .background(item.color.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
@@ -243,7 +244,7 @@ private fun StatCard(item: StatItem, modifier: Modifier = Modifier) {
             }
             Text(
                 text = item.label,
-                fontSize = 11.sp,
+                fontSize = 10.sp,
                 letterSpacing = 1.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -258,84 +259,65 @@ private fun StatCard(item: StatItem, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AccountSettingsSection() {
+private fun AccountSettingsSection(
+    onOpenApiSettings: () -> Unit,
+    onLogout: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Account Settings",
+                text = "Pengaturan",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
-            SettingsRow("Edit Profile Bio", Icons.Filled.Edit)
-            SettingsRow("Avatar Customization", Icons.Filled.Palette)
-            SettingsRow("Notification Preferences", Icons.Filled.Notifications)
-            SettingsRow("Sign Out", Icons.Filled.Logout, isDestructive = true)
+            SettingsRow("Pengaturan Koneksi API", Icons.Filled.Settings, onClick = onOpenApiSettings)
+            SettingsRow("Keluar", Icons.Filled.Logout, isDestructive = true, onClick = onLogout)
         }
     }
 }
 
 @Composable
 private fun AchievementsSection(onOpen: () -> Unit) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        modifier = Modifier.clickable { onOpen() }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFF3E0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Stars,
-                        contentDescription = null,
-                        tint = Color(0xFFEF6C00)
-                    )
-                }
-                Spacer(modifier = Modifier.size(12.dp))
-                Column {
-                    Text(
-                        text = "Game Achievement",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = "Lihat hasil tiap permainan",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-            }
-            Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null, tint = Color(0xFF9E9E9E))
-        }
-    }
+    NavigationCard(
+        title = "Game Achievement",
+        subtitle = "Lihat materi kuis, kartu SDG, dan lainnya",
+        icon = Icons.Filled.EmojiEvents,
+        color = Color(0xFFEF6C00),
+        onClick = onOpen
+    )
 }
 
 @Composable
 private fun VouchersSection(onOpen: () -> Unit) {
+    NavigationCard(
+        title = "Voucher Saya",
+        subtitle = "Klaim voucher hasil misi",
+        icon = Icons.Filled.CardGiftcard,
+        color = Color(0xFF2E7D32),
+        onClick = onOpen
+    )
+}
+
+@Composable
+private fun NavigationCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    color: Color,
+    onClick: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        modifier = Modifier.clickable { onOpen() }
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = Modifier.clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -349,30 +331,30 @@ private fun VouchersSection(onOpen: () -> Unit) {
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFE8F5E9)),
+                        .background(color.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.CardGiftcard,
-                        contentDescription = null,
-                        tint = Color(0xFF2E7D32)
-                    )
+                    Icon(imageVector = icon, contentDescription = null, tint = color)
                 }
-                Spacer(modifier = Modifier.size(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Voucher Saya",
+                        text = title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Klaim voucher dari misi",
+                        text = subtitle,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
             }
-            Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null, tint = Color(0xFF9E9E9E))
+            Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF9E9E9E)
+            )
         }
     }
 }
@@ -380,26 +362,32 @@ private fun VouchersSection(onOpen: () -> Unit) {
 @Composable
 private fun SettingsRow(
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isDestructive: Boolean = false
+    icon: ImageVector,
+    isDestructive: Boolean = false,
+    onClick: () -> Unit
 ) {
     val tint = if (isDestructive) Color(0xFFD32F2F) else MaterialTheme.colorScheme.primary
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF8F8F8))
+            .background(Color(0xFFF4FBF6))
+            .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(imageVector = icon, contentDescription = null, tint = tint)
-            Spacer(modifier = Modifier.size(10.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Text(text = label, fontSize = 14.sp, color = tint)
         }
         if (!isDestructive) {
-            Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null, tint = Color(0xFF9E9E9E))
+            Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF9E9E9E)
+            )
         }
     }
 }
@@ -407,6 +395,6 @@ private fun SettingsRow(
 private data class StatItem(
     val label: String,
     val value: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val icon: ImageVector,
     val color: Color
 )
