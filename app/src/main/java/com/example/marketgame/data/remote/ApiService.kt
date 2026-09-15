@@ -7,12 +7,39 @@ import retrofit2.http.*
 
 data class LoginRequest(val email: String, val password: String)
 data class RegisterRequest(val name: String, val email: String, val password: String, val password_confirmation: String)
-data class AuthResponse(val message: String, val user: UserResponse?, val token: String?)
+
+// Backend (identity/auth/password-login + password-register) mengembalikan
+// payload auth TANPA wrapper — top-level: {user, roles, active_role, store,
+// token_type, access_token, api_token}.
+data class AuthPayloadResponse(
+    val user: UserResponse?,
+    val roles: List<String>?,
+    val active_role: String?,
+    val store: StoreBriefResponse?,
+    val token_type: String?,
+    val access_token: String?,
+    val api_token: String?
+)
+
+data class StoreBriefResponse(
+    val id: String?,
+    val name: String?,
+    val slug: String?,
+    val logo: String?
+)
+
+// identity/auth/me mengembalikan {user, roles, active_role, store}
+data class MeResponse(
+    val user: UserResponse?,
+    val roles: List<String>?,
+    val active_role: String?,
+    val store: StoreBriefResponse?
+)
 
 // ── User ─────────────────────────────────────────────────────────────────
 
 data class UserResponse(
-    val id: Int,
+    val id: String,
     val name: String,
     val email: String,
     val role: String?,
@@ -85,9 +112,9 @@ data class GameReportRequest(
 )
 
 data class GameReportResponse(
-    val session: GameSessionResponse?,
     val success: Boolean?,
-    val message: String?
+    val message: String?,
+    val data: GameSessionResponse?
 )
 
 data class GameSessionResponse(
@@ -171,13 +198,13 @@ interface ApiService {
     // ── Auth ─────────────────────────────────────────────────────────────
 
     @POST("identity/auth/password-login")
-    suspend fun login(@Body request: LoginRequest): ApiResponse<AuthResponse>
+    suspend fun login(@Body request: LoginRequest): AuthPayloadResponse
 
     @POST("identity/auth/password-register")
-    suspend fun register(@Body request: RegisterRequest): ApiResponse<AuthResponse>
+    suspend fun register(@Body request: RegisterRequest): AuthPayloadResponse
 
     @GET("identity/auth/me")
-    suspend fun getMe(): ApiResponse<UserResponse>
+    suspend fun getMe(): AuthPayloadResponse
 
     @POST("identity/auth/logout")
     suspend fun logout(): ApiResponse<Unit>

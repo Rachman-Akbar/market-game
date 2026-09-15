@@ -24,17 +24,17 @@ class AuthRepository(context: Context) {
 
     suspend fun login(email: String, password: String): Result<UserResponse> {
         return try {
-            val result = api.login(LoginRequest(email, password))
-            val authData = result.data
-            val user = authData?.user
-            if (authData?.token != null) {
-                saveToken(authData.token)
+            val authData = api.login(LoginRequest(email, password))
+            val user = authData.user
+            val token = authData.api_token ?: authData.access_token
+            if (token != null) {
+                saveToken(token)
                 saveUserId(user?.id)
             }
             if (user != null) {
                 Result.success(user)
             } else {
-                Result.failure(RuntimeException(result.message ?: "Login gagal. Periksa email dan kata sandi."))
+                Result.failure(RuntimeException("Login gagal. Periksa email dan kata sandi."))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -50,19 +50,19 @@ class AuthRepository(context: Context) {
         passwordConfirmation: String
     ): Result<UserResponse> {
         return try {
-            val result = api.register(
+            val authData = api.register(
                 RegisterRequest(name, email, password, passwordConfirmation)
             )
-            val authData = result.data
-            val user = authData?.user
-            if (authData?.token != null) {
-                saveToken(authData.token)
+            val user = authData.user
+            val token = authData.api_token ?: authData.access_token
+            if (token != null) {
+                saveToken(token)
                 saveUserId(user?.id)
             }
             if (user != null) {
                 Result.success(user)
             } else {
-                Result.failure(RuntimeException(result.message ?: "Registrasi gagal."))
+                Result.failure(RuntimeException("Registrasi gagal."))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -73,12 +73,11 @@ class AuthRepository(context: Context) {
 
     suspend fun getProfile(): Result<UserResponse> {
         return try {
-            val result = api.getMe()
-            val user = result.data
+            val user = api.getMe().user
             if (user != null) {
                 Result.success(user)
             } else {
-                Result.failure(RuntimeException(result.message ?: "Gagal memuat profil."))
+                Result.failure(RuntimeException("Gagal memuat profil."))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -106,9 +105,9 @@ class AuthRepository(context: Context) {
         prefs.edit().putString("auth_token", token).apply()
     }
 
-    private fun saveUserId(userId: Int?) {
+    private fun saveUserId(userId: String?) {
         if (userId != null) {
-            prefs.edit().putInt("user_id", userId).apply()
+            prefs.edit().putString("user_id", userId).apply()
         }
     }
 

@@ -1,8 +1,10 @@
 package com.example.marketgame.data.remote
 
 import android.content.Context
+import com.example.marketgame.BuildConfig
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -105,13 +107,13 @@ object ApiClient {
     ) : Interceptor {
         override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
             val original = chain.request()
-            val dynamic = okhttp3.HttpUrl.parse(baseUrlManager.getBaseUrl())
+            val dynamic = baseUrlManager.getBaseUrl().toHttpUrlOrNull()
                 ?: return chain.proceed(original)
 
             val newUrl = original.url.newBuilder()
-                .scheme(dynamic.scheme())
-                .host(dynamic.host())
-                .port(dynamic.port())
+                .scheme(dynamic.scheme)
+                .host(dynamic.host)
+                .port(dynamic.port)
                 .build()
 
             val newRequest = original.newBuilder()

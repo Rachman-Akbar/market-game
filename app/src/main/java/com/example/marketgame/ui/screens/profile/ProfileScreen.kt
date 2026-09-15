@@ -32,6 +32,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,7 +54,7 @@ fun ProfileScreen(
     navController: NavController? = null,
     viewModel: ProfileViewModel = viewModel()
 ) {
-    val profile = viewModel.profile
+    val profile by viewModel.profile.collectAsState()
     val stats = listOf(
         StatItem("XP EARNED", "12,450", Icons.Filled.TaskAlt, Color(0xFF4CAF50)),
         StatItem("TOTAL HK", "2,840", Icons.Filled.TaskAlt, Color(0xFFF9A825)),
