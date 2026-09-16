@@ -73,8 +73,9 @@ class ApiSettingsViewModel(application: Application) : AndroidViewModel(applicat
             _testResult.value = null
             try {
                 val api = ApiClient.getInstance(getApplication())
-                val response = api.getProducts(page = 1, perPage = 1)
-                _testResult.value = "OK - Server terhubung (${response.data.size} products ditemukan)"
+                val response = api.getCategories()
+                val count = response.data?.size ?: 0
+                _testResult.value = "OK - Server terhubung ($count kategori ditemukan)"
             } catch (e: Exception) {
                 _testResult.value = "GAGAL - ${e.message}"
             }

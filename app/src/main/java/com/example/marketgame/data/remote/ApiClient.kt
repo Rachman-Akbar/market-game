@@ -28,6 +28,10 @@ object ApiClient {
     private const val READ_TIMEOUT = 30L
     private const val WRITE_TIMEOUT = 30L
 
+    class ApiException(message: String) : RuntimeException(message)
+
+    private data class ErrorBody(val message: String?)
+
     @Volatile
     private var retrofit: Retrofit? = null
 
@@ -83,6 +87,7 @@ object ApiClient {
             .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
             .addInterceptor(DynamicBaseUrlInterceptor(baseUrlManager))
             .addInterceptor(authInterceptor(context))
+            .addInterceptor(errorMessageInterceptor())
             .addInterceptor(loggingInterceptor())
             .build()
 
@@ -159,6 +164,33 @@ object ApiClient {
             } else {
                 HttpLoggingInterceptor.Level.NONE
             }
+        }
+    }
+
+    /**
+     * Mengubah respons error non-2xx menjadi [ApiException] dengan pesan dari
+     * body backend ({message, errors}), sehingga layar/ViewModel bisa menampilkan
+     * keterangan asli (mis. "Email belum diverifikasi") alih-alih "HTTP 403".
+     */
+    private fun errorMessageInterceptor(): Interceptor {
+        return Interceptor { chain ->
+            val response = chain.proceed(chain.request())
+            if (response.isSuccessful) {
+                return@Interceptor response
+            }
+
+            val rawBody = response.peekBody(Long.MAX_VALUE).string()
+            val message = runCatching {
+                moshi.adapter(ErrorBody::class.java).fromJson(rawBody)?.message
+            }.getOrNull().orEmpty().trim().ifBlank { null } ?: rawBody.ifBlank { null }
+
+            response.close()
+
+            if (message != null) {
+                throw ApiException(message)
+            }
+
+            response
         }
     }
 }

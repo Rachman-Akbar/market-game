@@ -98,7 +98,6 @@ dependencies {
     implementation(libs.moshi)
     ksp(libs.moshi.codegen)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.security.crypto)
 
     // Firebase Auth + Google Sign-In (backend verifies via service account)
     implementation(libs.play.services.auth)
