@@ -262,7 +262,6 @@ object GameDataRepository {
             statement = p.string("statement") ?: title ?: return null,
             isFact = p.getAsBoolean("is_fact") ?: false,
             imageUrl = p.string("image_url")
-                ?: "https://lh3.googleusercontent.com/aida-public/AB6AXuCz_4TXD7jRsuq4r5m1U4h2yq7s_GG_xrTQ0Z7k8kL-0V1c8B9it8e9rjWfVh0tL4xU1mQAEf1B7D0gK_5oKrgyHulWzTqWvVx9NfJm1k8Y9"
         )
     }
 

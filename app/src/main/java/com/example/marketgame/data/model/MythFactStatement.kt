@@ -4,5 +4,5 @@ data class MythFactStatement(
     val id: Int,
     val statement: String,
     val isFact: Boolean,
-    val imageUrl: String
+    val imageUrl: String? = null
 )
